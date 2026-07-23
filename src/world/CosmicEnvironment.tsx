@@ -83,8 +83,9 @@ const fragmentShader = /* glsl */ `
 
     vec3 accent = mix(uAccentA, uAccentB, uBlend);
 
-    // Deep space base, warmed by a second, cooler hue so it never looks flat-tinted.
-    vec3 deep  = vec3(0.016, 0.020, 0.035);
+    // TRUE black. The void emits nothing — every photon in the frame comes from a particle
+    // or from the nebula's own scattering, which is what gives the image its contrast.
+    vec3 deep  = vec3(0.0);
     vec3 cool  = vec3(0.10, 0.16, 0.42);
 
     // The nebula opens the experience INVISIBLE — the vortex is alone in the dark — then

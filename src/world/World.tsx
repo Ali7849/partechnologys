@@ -2,13 +2,7 @@
 
 import { Environment, Lightformer, PerformanceMonitor, Preload } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import {
-  Bloom,
-  ChromaticAberration,
-  DepthOfField,
-  EffectComposer,
-  Vignette,
-} from '@react-three/postprocessing';
+import { Bloom, ChromaticAberration, EffectComposer, Vignette } from '@react-three/postprocessing';
 import { useEffect, useMemo } from 'react';
 import { ACESFilmicToneMapping, HalfFloatType, Vector2 } from 'three';
 
@@ -58,16 +52,18 @@ function Governor() {
 function Post() {
   const aberration = useMemo(() => new Vector2(0.0004, 0.0006), []);
 
-  // 2× MSAA rather than 4×: with 400k additive points the composer resolve is the single most
-  // expensive pass, and bloom softens edges anyway — this buys back real frame time.
+  // PROFILE NOTE — with additive points the bottleneck is fill rate and the post chain, not
+  // vertex count. The two most expensive passes were MSAA resolve on a half-float target and
+  // depth of field (multi-pass). Both are gone: MSAA does almost nothing for sub-2px points,
+  // and DOF was the direct cause of the softness. Removing them buys back significant frame
+  // time AND sharpens the image — the rare case where the fix serves both.
   return (
-    <EffectComposer multisampling={2} frameBufferType={HalfFloatType}>
-      {/* subtle, and focused on the core — distance softens, the subject never does */}
-      <DepthOfField focusDistance={0.026} focalLength={0.035} bokehScale={1.0} height={640} />
-      {/* tight radius + high threshold: only genuinely hot pixels bloom */}
-      <Bloom intensity={0.8} luminanceThreshold={0.45} luminanceSmoothing={0.16} radius={0.6} mipmapBlur />
-      <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.45} />
-      <Vignette eskil={false} offset={0.3} darkness={0.6} />
+    <EffectComposer multisampling={0} frameBufferType={HalfFloatType}>
+      {/* High threshold: ONLY the HDR particles bloom. The background contributes no light,
+          so blacks stay black and the glow reads as optical rather than a wash. */}
+      <Bloom intensity={1.15} luminanceThreshold={0.62} luminanceSmoothing={0.12} radius={0.5} mipmapBlur />
+      <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.5} />
+      <Vignette eskil={false} offset={0.22} darkness={0.78} />
     </EffectComposer>
   );
 }
@@ -99,8 +95,11 @@ export function World() {
           depth: true,
           powerPreference: 'high-performance',
           toneMapping: ACESFilmicToneMapping,
-          toneMappingExposure: 1.05,
+          // Pulled below 1 so the toe of the ACES curve crushes to true black rather than
+          // lifting into grey — contrast comes from the HDR particles, not from exposure.
+          toneMappingExposure: 0.92,
         }}
+        onCreated={({ gl }) => gl.setClearColor(0x000000, 1)}
       >
         <Governor />
 

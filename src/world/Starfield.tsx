@@ -9,24 +9,28 @@ import { useWorld } from '@/state/useWorld';
 import { accentAt, actsAt } from './scenes';
 
 /**
- * THE PARTICLE UNIVERSE — one system that plays every act of the opening.
+ * THE PARTICLE UNIVERSE — one system that plays every act.
  *
  * The SAME 400,000 particles are the vortex, the volumetric field, and the energy streams
- * around the hero. Nothing is ever swapped out or re-spawned; each particle simply carries two
- * forms and is interpolated between them, which is what makes the sequence read as one
- * continuous evolution rather than a series of effects.
+ * around the core. Each carries two forms and is interpolated between them, so the sequence is
+ * one continuous evolution rather than effects swapping over.
  *
- *   ACT 1  an elliptical vortex alone in the dark — breathing, stretching, swirling
- *   ACT 2  it accelerates and unfurls outward into a volumetric field, orbital motion intact
+ *   ACT 1  a vertically-stretched elliptical vortex — an eye, not a ring — sitting right of
+ *          centre, swirling in its own plane, breathing and stretching on offset cycles
+ *   ACT 2  it opens and unfurls outward into the volumetric field; the camera enters it
  *   ACT 3  the nebula wraps around these same particles
- *   ACT 4  ~3.5% are captured into streams orbiting the core; the rest remain as the universe
+ *   ACT 4  ~8% are captured into permanent orbiting streams; the rest remain as the universe
  *
- * Motion is never plain rotation: a vortex field (tangential velocity with a gravitational
- * inward pull, differential by radius) is layered with curl-style procedural flow, so the
- * particles behave like a fluid under a force rather than points on a spinning disc.
+ * NOTHING EVER FREEZES: the vortex swirls, the field rotates differentially, curl flow runs
+ * continuously, and the captured streams orbit forever — the universe stays alive for the
+ * entire journey, not just the intro.
  *
- * Performance: one draw call, two attributes (~9.6MB), zero per-frame allocation, adaptive
- * draw range, and distance fade that doubles as free LOD.
+ * On particle SIZE — a deliberate engineering note. Below ~1 device pixel a point cannot get
+ * visually smaller; the GPU still rasterises roughly one pixel, it just aliases. So making
+ * particles "imperceptible" is not a size problem, it is a DENSITY × ALPHA problem: each
+ * particle contributes very little light, and the glow is built by additive accumulation of
+ * thousands of them. That is how film-grade volumetrics are actually made, and it is why the
+ * per-particle alpha here is low and the falloff is smooth rather than hard-edged.
  */
 
 const COUNT = 400_000;
@@ -37,7 +41,7 @@ const vertexShader = /* glsl */ `
 
   uniform float uTime;
   uniform float uSpin;
-  uniform float uExpand;   // act 2 — vortex unfurls into the volumetric field
+  uniform float uExpand;   // act 2 — the vortex opens into the field
   uniform float uHero;     // act 4 — capture into orbiting streams
   uniform float uPixelRatio;
   uniform vec2  uMouse;
@@ -68,8 +72,7 @@ const vertexShader = /* glsl */ `
     return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
   }
 
-  // Curl-style procedural flow — cheap, divergence-free in feel, and it keeps the field
-  // behaving like moving gas instead of a rigid body.
+  // Curl-style procedural flow — keeps the field behaving like moving gas, never a rigid body.
   vec3 curlish(vec3 p, float t) {
     return vec3(
       sin(p.y * 1.7 + t) * cos(p.z * 1.3 - t * 0.7),
@@ -79,59 +82,62 @@ const vertexShader = /* glsl */ `
   }
 
   void main() {
-    // ── ACT 1 · the elliptical vortex ────────────────────────────────────────
-    // An oval ring: stretched in X, thin in Y, thickening toward its outer edge. It breathes
-    // and stretches on slow offset cycles so it never settles into a fixed shape.
+    // ── ACT 1 · the vortex ───────────────────────────────────────────────────
+    // Built in the XY plane so it FACES the viewer, and stretched vertically into the
+    // silhouette of an eye rather than a circular ring.
     float ang    = aRandom.z * 6.2831;
-    float radial = pow(aRandom.x, 0.6);
-    float ringR  = 1.35 + radial * 3.30;
+    float radial = pow(aRandom.x, 0.55);
+    float ringR  = 0.85 + radial * 3.05;
 
-    float breathe = 1.0 + 0.10 * sin(uTime * 0.33);
-    float stretch = 1.0 + 0.14 * sin(uTime * 0.21 + 1.3);
-    float squash  = 1.0 + 0.09 * sin(uTime * 0.27 + 2.1);
+    float breathe = 1.0 + 0.09 * sin(uTime * 0.33);
+    float stretch = 1.0 + 0.12 * sin(uTime * 0.21 + 1.3);
+    float squash  = 1.0 + 0.08 * sin(uTime * 0.27 + 2.1);
 
     vec3 vortex = vec3(
-      cos(ang) * ringR * 2.05 * stretch * breathe,
-      (aRandom.y - 0.5) * (0.28 + radial * 0.55) * squash,
-      sin(ang) * ringR * 0.92 * breathe
+      cos(ang) * ringR * 0.60 * squash,
+      sin(ang) * ringR * 1.52 * stretch * breathe,
+      (aRandom.y - 0.5) * (0.30 + radial * 0.85)
     );
 
-    // ── ACT 2 · unfurl into the volumetric field ─────────────────────────────
-    // The position attribute holds the expanded form. The vortex evolves into it, never swaps.
-    vec3 p = mix(vortex, position, uExpand);
+    // Swirls in its own plane, inner faster than outer.
+    vortex = rotZ(vortex, uTime * uSpin * (1.25 / (0.5 + ringR * 0.30)));
 
-    // ── Vortex field ─────────────────────────────────────────────────────────
-    // Differential orbital motion, preserved through the expansion, plus a gravitational
-    // pull toward the centre that slackens as the field opens out.
-    float rr = max(length(p.xz), 0.001);
-    float orbital = uSpin * (1.35 / (0.55 + rr * 0.22));
-    p = rotY(p, uTime * orbital);
+    // Sits right of centre, drifting back to centre as it opens.
+    vortex.x += 2.15 * (1.0 - uExpand * 0.85);
 
-    vec2 inward = -p.xz / rr;
-    float gravity = 0.55 * (1.0 - uExpand) * (0.3 + radial);
-    p.xz += inward * gravity;
+    // ── ACT 2 · the volumetric field ─────────────────────────────────────────
+    vec3 field = position;
+    float fr = max(length(field.xz), 0.001);
+    field = rotY(field, uTime * uSpin * (1.05 / (0.55 + fr * 0.22)));
 
-    // Orbital turbulence — stronger as the field opens, so expansion feels energetic.
-    p += curlish(p * 0.17, uTime * 0.4) * (0.16 + uExpand * 0.85);
+    // The vortex OPENS into the field — the same particles, never replaced.
+    vec3 p = mix(vortex, field, uExpand);
+
+    // Gravitational pull toward the centre, slackening as the field opens out.
+    vec2 rc = p.xz;
+    float rr = max(length(rc), 0.001);
+    p.xz += (-rc / rr) * (0.5 * (1.0 - uExpand) * (0.3 + radial));
+
+    // Orbital turbulence — stronger as the field expands, so opening feels energetic.
+    p += curlish(p * 0.17, uTime * 0.4) * (0.14 + uExpand * 0.8);
 
     // Mouse tilts the whole force, strongest while the vortex owns the frame.
     float lean = 1.0 - uExpand * 0.55;
-    p = rotX(p, uMouse.y * 0.16 * lean);
-    p = rotZ(p, -uMouse.x * 0.13 * lean);
+    p = rotX(p, uMouse.y * 0.15 * lean);
+    p = rotZ(p, -uMouse.x * 0.12 * lean);
 
-    // ── ACT 4 · capture ──────────────────────────────────────────────────────
+    // ── ACT 4 · permanent orbiting streams ───────────────────────────────────
     float role = hash11(aRandom.x * 91.7 + aRandom.z * 17.3);
-    float captured = step(role, 0.035);
+    float captured = step(role, 0.08);
 
-    float orbR = 2.2 + hash11(aRandom.y * 41.0) * 1.4;
+    float orbR = 2.1 + hash11(aRandom.y * 41.0) * 1.5;
     float oa = uTime * (0.7 + aRandom.y * 0.7) + aRandom.z * 6.2831;
     vec3 orbit = vec3(
       cos(oa) * orbR,
-      sin(oa * 1.6 + aRandom.x * 5.0) * 0.38 + (aRandom.y - 0.5) * 0.8,
+      sin(oa * 1.6 + aRandom.x * 5.0) * 0.40 + (aRandom.y - 0.5) * 0.8,
       sin(oa) * orbR
     );
 
-    // Everything not captured STAYS — the universe never empties to reveal the hero.
     vec3 finalPos = mix(p, orbit, captured * uHero);
 
     vec4 mv = modelViewMatrix * vec4(finalPos, 1.0);
@@ -140,28 +146,31 @@ const vertexShader = /* glsl */ `
     float dist = max(-mv.z, 0.5);
 
     // ── Look ─────────────────────────────────────────────────────────────────
-    // Microscopic and hard-clamped: premium dust, never blobs.
+    // Microscopic. Roughly a fifth of the previous footprint, which is also the single
+    // largest saving in blended fill rate.
     float sizeSeed = aRandom.x;
-    float bright = step(0.988, sizeSeed);
-    float size = (0.26 + sizeSeed * 0.38) + bright * 1.0;
-    gl_PointSize = clamp(size * (95.0 / dist), 0.5, 2.8) * uPixelRatio;
+    float bright = step(0.991, sizeSeed);
+    float size = (0.09 + sizeSeed * 0.15) + bright * 0.32;
+    gl_PointSize = clamp(size * (95.0 / dist), 0.62, 1.75) * uPixelRatio;
 
     // Cool blue-white, occasional warm stars, accent bleeding in at depth.
     float temp = aRandom.y;
     vec3 c = mix(vec3(0.70, 0.81, 1.00), vec3(0.98, 0.99, 1.00), smoothstep(0.25, 0.80, temp));
     c = mix(c, vec3(1.00, 0.80, 0.58), step(0.90, temp) * 0.9);
     c = mix(c, uAccent, smoothstep(45.0, 90.0, dist) * 0.35);
-    c = mix(c, uAccent * 1.5 + 0.25, captured * uHero);
+    c = mix(c, uAccent * 1.6 + 0.3, captured * uHero);
 
-    // HDR: push the brightest stars above 1.0 so bloom has something real to catch.
-    float lum = 0.30 + pow(temp, 1.6) * 0.75 + bright * 0.55;
-    vColor = c * (0.85 + bright * 1.9);
+    // HDR — the brightest particles sit well above 1.0 so bloom has real energy to gather.
+    // The particles make the light; the background contributes none.
+    vColor = c * (1.15 + bright * 3.2);
 
-    float twinkle = 0.72 + 0.28 * sin(uTime * (0.6 + aRandom.z * 1.8) + aRandom.x * 30.0);
+    float lum = 0.26 + pow(temp, 1.7) * 0.62 + bright * 0.5;
+    float twinkle = 0.74 + 0.26 * sin(uTime * (0.6 + aRandom.z * 1.8) + aRandom.x * 30.0);
     float depthFade = 1.0 - smoothstep(52.0, 96.0, dist);
     float nearFade = smoothstep(1.0, 3.5, dist);
 
-    vAlpha = lum * twinkle * depthFade * nearFade;
+    // Low per-particle contribution: the glow is built by accumulation, not by any one dot.
+    vAlpha = lum * twinkle * depthFade * nearFade * 0.42;
   }
 `;
 
@@ -172,11 +181,13 @@ const fragmentShader = /* glsl */ `
   varying float vAlpha;
 
   void main() {
-    // Razor-sharp: a hard core with the barest falloff, and dead fragments thrown away early
-    // so transparent overdraw costs as little fill as possible.
-    float d = length(gl_PointCoord - 0.5);
-    float a = 1.0 - smoothstep(0.14, 0.5, d);
-    if (a <= 0.01) discard;
+    // Smooth gaussian-style falloff — no hard rim, so particles never read as sprites or
+    // show stair-stepping at these sizes. Dead fragments are dropped before blending.
+    vec2 uv = gl_PointCoord - 0.5;
+    float d2 = dot(uv, uv);
+    if (d2 > 0.25) discard;
+    float a = exp(-d2 * 9.0) - 0.105;
+    if (a <= 0.0) discard;
     gl_FragColor = vec4(vColor, a * vAlpha);
   }
 `;
@@ -267,9 +278,9 @@ export function Starfield() {
     const { progress, quality, mouseX, mouseY } = useWorld.getState();
     const acts = actsAt(progress);
 
-    // The vortex is energetic on arrival, settles, then accelerates again as it unfurls.
-    const settle = 0.55 + 0.85 * Math.exp(-elapsed.current * 0.35);
-    uniforms.uSpin.value = settle + acts.expand * 0.9;
+    // Settles from its arrival energy, then accelerates again as it opens. Never reaches zero.
+    const settle = 0.62 + 0.75 * Math.exp(-elapsed.current * 0.35);
+    uniforms.uSpin.value = settle + acts.expand * 0.85;
 
     uniforms.uExpand.value += (acts.expand - uniforms.uExpand.value) * Math.min(1, step * 2.4);
     uniforms.uHero.value += (acts.hero - uniforms.uHero.value) * Math.min(1, step * 2.4);
@@ -283,8 +294,7 @@ export function Starfield() {
     accent.lerp(accentB, blend);
     uniforms.uAccent.value.lerp(accent, Math.min(1, step * 2));
 
-    // Adaptive density — thin under load, restore when headroom returns. Draw range only,
-    // never a reallocation.
+    // Adaptive density — thin under load, restore when headroom returns. Draw range only.
     const target =
       Math.round(
         (COUNT * (MIN_QUALITY_FRACTION + (1 - MIN_QUALITY_FRACTION) * quality)) / 10_000,
