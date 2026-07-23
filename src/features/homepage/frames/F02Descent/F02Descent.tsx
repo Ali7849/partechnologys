@@ -17,14 +17,21 @@ import styles from './F02Descent.module.css';
  * the page's entire scrub budget, spent here in full — the only scrubbed frame, and the only
  * frame with no GSAP timeline (BUILD_SPEC F02).
  *
- * The section-cut uniform in the 3D subject reads scrollProgress from the store inside
- * useFrame; here we also position a DOM section line and the live Z-readout from the same
- * value, written straight to the DOM (no per-frame React render). Native scroll is untouched.
+ * The stencil section-cut uniform in the 3D subject reads scrollProgress from the store inside
+ * useFrame; here the same value drives a drafting instrument in the DOM — a graduated Z-scale
+ * and a coordinate callout that rides the descending cut line — written straight to the DOM
+ * (no per-frame React render). Native scroll is never touched.
  */
 
 // Model-space clip coordinate the plane travels through (mirrors PlaceholderSubject).
 const Z_TOP = 2.0;
 const Z_RANGE = 2.9;
+
+// Static graduations for the drafting scale (top → bottom of travel).
+const TICKS = [0, 0.25, 0.5, 0.75, 1].map((f) => ({
+  f,
+  label: (Z_TOP - f * Z_RANGE).toFixed(1),
+}));
 
 export function F02Descent() {
   const lineRef = useRef<HTMLDivElement>(null);
@@ -44,7 +51,7 @@ export function F02Descent() {
     }
   });
 
-  // The single scrub. Positions the DOM line and writes the Z value directly, off the ticker.
+  // The single scrub. Positions the DOM cut line and writes the Z value directly, off the ticker.
   useScrollProgress(frameRef, {
     disabled: reduced,
     onUpdate: (progress) => {
@@ -61,14 +68,31 @@ export function F02Descent() {
         <h2 id="f02-heading" className="visually-hidden">
           The system, shown in section
         </h2>
+
+        {/* graduated Z-scale — the fixed reference the cut travels against */}
+        <div className={styles.scale} aria-hidden="true">
+          {TICKS.map((t) => (
+            <div key={t.f} className={styles.tick} style={{ top: `${t.f * 100}%` }}>
+              <span className={styles.tickMark} />
+              <span className={styles.tickLabel} data-mono>
+                {t.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* the descending cut line — carries the plane tag and the coordinate callout */}
         <div className={styles.track}>
           <div ref={lineRef} className={styles.plane}>
             <Text as="span" scale="m3" tone="prussian" className={styles.planeTag}>
               SECTION PLANE
             </Text>
+            <span className={styles.arrow} aria-hidden="true" />
+            <div className={styles.callout}>
+              <ZReadout valueRef={valueRef} />
+            </div>
           </div>
         </div>
-        <ZReadout valueRef={valueRef} />
       </div>
     </section>
   );

@@ -12,10 +12,44 @@
   overflow: hidden;
 }
 
-/* Full-viewport track the section line travels down, 0% → 100%. */
+/* ── Graduated Z-scale — the fixed drafting reference ─────────────────────────── */
+.scale {
+  position: absolute;
+  inset-block: 12vh 12vh;
+  inset-inline-start: calc(var(--grid-rail) + var(--m-4));
+  inline-size: 1px;
+  background-color: var(--zinc-30);
+  pointer-events: none;
+}
+
+.tick {
+  position: absolute;
+  inset-inline-start: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--m-1);
+  transform: translateY(-50%);
+}
+
+.tickMark {
+  inline-size: var(--m-2);
+  block-size: 1px;
+  background-color: var(--zinc);
+}
+
+.tickLabel {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--type-m3-size);
+  letter-spacing: 0.08em;
+  color: var(--zinc);
+}
+
+/* ── The descending cut line ──────────────────────────────────────────────────── */
 .track {
   position: absolute;
-  inset: 0;
+  inset-block: 12vh 12vh;
+  inset-inline: 0 0;
   pointer-events: none;
 }
 
@@ -30,24 +64,44 @@
 
 .planeTag {
   position: absolute;
-  inset-block-start: var(--m-1);
-  inset-inline-end: 0;
+  inset-block-end: var(--m-1);
+  inset-inline-start: 0;
   color: var(--prussian);
 }
 
-.readout {
+/* Arrowhead riding the cut, pointing in toward the object. */
+.arrow {
   position: absolute;
-  inset-block-end: var(--m-8);
-  inset-inline-start: calc(var(--grid-rail) + var(--m-6));
+  inset-block-start: -3px;
+  inset-inline-start: 30%;
+  inline-size: 0;
+  block-size: 0;
+  border-block: 4px solid transparent;
+  border-inline-start: 7px solid var(--prussian);
+}
+
+/* Coordinate callout riding the right end of the cut line. */
+.callout {
+  position: absolute;
+  inset-block-start: calc(-1 * var(--m-6));
+  inset-inline-end: 0;
+}
+
+.readout {
   display: flex;
   flex-direction: column;
   gap: var(--m-05);
+  align-items: flex-end;
+  padding: var(--m-1) var(--m-2);
+  border: 1px solid var(--prussian);
+  border-radius: var(--radius);
+  background-color: var(--cured);
 }
 
 .readoutValue {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: var(--type-d3-size);
+  font-size: var(--type-h3-size);
   line-height: 1;
   color: var(--substrate);
 }
@@ -57,10 +111,13 @@
   .frame {
     block-size: 100vh;
   }
-  .plane {
-    inset-inline: calc(var(--grid-rail-mobile) + var(--m-2)) var(--m-2);
+  .scale {
+    inset-inline-start: calc(var(--grid-rail-mobile) + var(--m-2));
   }
-  .readout {
-    inset-inline-start: calc(var(--grid-rail-mobile) + var(--m-3));
+  .plane {
+    inset-inline: calc(var(--grid-rail-mobile) + var(--m-3)) var(--m-3);
+  }
+  .readoutValue {
+    font-size: var(--type-h3-size);
   }
 }
