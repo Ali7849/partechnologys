@@ -2,33 +2,63 @@
 
 import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, Matrix4, type InstancedMesh, type MeshStandardMaterial } from 'three';
+import {
+  BufferGeometry,
+  Color,
+  Float32BufferAttribute,
+  Matrix4,
+  type InstancedMesh,
+  type LineSegments,
+  type MeshStandardMaterial,
+} from 'three';
 
 import { requestRender } from '@/motion/ticker';
 import { NODES } from '@/features/homepage/content/placeholders';
+import { COLOR } from '@/styles/tokens';
 
 import { MATTE } from '../materials/materials';
 
 /**
- * NODE FIELD (F05) — every real PAR system and Pontis site as one InstancedMesh: one draw
- * call regardless of count (the page's peak GPU moment, verified to return to idle once the
- * plan camera locks). The subject the visitor was just inside becomes one node among them.
+ * NODE FIELD (F05) — every real PAR system and Pontis site as a live operations lattice: an
+ * InstancedMesh of nodes (one draw call) plus connective lines between neighbours, so the field
+ * reads as a running network rather than scattered dots. The subject the visitor was just inside
+ * is marked in Prussian — "the one you were just inside," now one node among the whole operation.
  *
- * The field is NOT staggered — the motion system caps stagger at six, and a field exceeds it.
- * Instead a single shared opacity fades the whole InstancedMesh in at once, which is both the
- * correct reading of scale ("the field appears") and mechanically one animated value, not N.
- *
- * Data is synthetic and blocked (Data Contract D4); positions prove the render approach only.
+ * The field is not staggered node-by-node; a single shared opacity fades the whole lattice in at
+ * once (the correct reading of scale). Data is synthetic and blocked (Data Contract D4); the
+ * positions prove the render approach only.
  */
 
-const NODE_SIZE = 0.5;
+const NODE_SIZE = 0.42;
+const LINK_DISTANCE = 2.6; // neighbours closer than this get a connective line
+
+const SUBJECT_COLOR = new Color(COLOR.prussian);
+const NODE_COLOR = new Color(MATTE.color);
 
 export function NodeField() {
   const mesh = useRef<InstancedMesh>(null);
+  const lines = useRef<LineSegments>(null);
   const opacity = useRef(0);
-  const color = useMemo(() => new Color(MATTE.color), []);
 
-  // Writes each instance's transform once — instances are static; only the shared opacity moves.
+  // Connective lattice: a line between every pair of neighbours within LINK_DISTANCE (XZ plane).
+  const latticeGeometry = useMemo(() => {
+    const verts: number[] = [];
+    NODES.forEach((a, ai) => {
+      NODES.forEach((b, bi) => {
+        if (bi <= ai) return;
+        const dx = a.position[0] - b.position[0];
+        const dz = a.position[2] - b.position[2];
+        if (Math.hypot(dx, dz) < LINK_DISTANCE) {
+          verts.push(...a.position, ...b.position);
+        }
+      });
+    });
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new Float32BufferAttribute(new Float32Array(verts), 3));
+    return geometry;
+  }, []);
+
+  // Places each instance and paints the subject node Prussian — written once (instances are static).
   useLayoutEffect(() => {
     const m = mesh.current;
     if (!m) return;
@@ -36,33 +66,39 @@ export function NodeField() {
     NODES.forEach((node, i) => {
       matrix.setPosition(node.position[0], node.position[1], node.position[2]);
       m.setMatrixAt(i, matrix);
+      m.setColorAt(i, node.isSubject ? SUBJECT_COLOR : NODE_COLOR);
     });
     m.instanceMatrix.needsUpdate = true;
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
     requestRender();
   }, []);
 
-  // Fades the field in as a single opacity uniform; redraws only while it is arriving.
-  useFrame((_, dt) => {
-    const m = mesh.current;
-    if (!m) return;
-    const material = m.material as MeshStandardMaterial;
-    if (opacity.current < 1) {
-      opacity.current = Math.min(1, opacity.current + dt * 2.4);
-      material.opacity = opacity.current;
-      requestRender();
-    }
+  // Fades the whole lattice in as a single shared opacity; redraws only while it is arriving.
+  useFrame(() => {
+    if (opacity.current >= 1) return;
+    opacity.current = Math.min(1, opacity.current + 0.02);
+    const nodeMat = mesh.current?.material as MeshStandardMaterial | undefined;
+    if (nodeMat) nodeMat.opacity = opacity.current;
+    const lineMat = lines.current?.material;
+    if (lineMat && !Array.isArray(lineMat)) lineMat.opacity = opacity.current * 0.5;
+    requestRender();
   });
 
   return (
-    <instancedMesh ref={mesh} args={[undefined, undefined, NODES.length]}>
-      <boxGeometry args={[NODE_SIZE, NODE_SIZE, NODE_SIZE]} />
-      <meshStandardMaterial
-        color={color}
-        roughness={MATTE.roughness}
-        metalness={MATTE.metalness}
-        transparent
-        opacity={0}
-      />
-    </instancedMesh>
+    <group>
+      <instancedMesh ref={mesh} args={[undefined, undefined, NODES.length]}>
+        <boxGeometry args={[NODE_SIZE, NODE_SIZE, NODE_SIZE]} />
+        <meshStandardMaterial
+          roughness={MATTE.roughness}
+          metalness={MATTE.metalness}
+          transparent
+          opacity={0}
+        />
+      </instancedMesh>
+
+      <lineSegments ref={lines} geometry={latticeGeometry}>
+        <lineBasicMaterial color={COLOR.prussian} transparent opacity={0} />
+      </lineSegments>
+    </group>
   );
 }

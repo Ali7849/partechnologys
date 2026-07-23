@@ -72,16 +72,27 @@ export type Node = {
   isSubject: boolean;
 };
 
-// Synthetic field — positions are generated for layout proving only, NOT real deployments.
-// Real counts and positions are blocked (D4).
-export const NODES: Node[] = Array.from({ length: 24 }, (_, i) => {
-  const angle = (i / 24) * Math.PI * 2;
-  const radius = 3 + (i % 5) * 1.4;
+// Synthetic field — a jittered isometric scatter generated for layout proving only, NOT real
+// deployments. Real counts and positions are blocked (D4). Deterministic (no random/Date) so
+// the server and client render identically — the hidden SR list is SSR'd from this same array.
+const NODE_COUNT = 48;
+const NODE_COLS = 8;
+
+export const NODES: Node[] = Array.from({ length: NODE_COUNT }, (_, i) => {
+  // Deterministic pseudo-random in [0,1) from the index — stable across server/client.
+  const rand = (seed: number) => {
+    const x = Math.sin((i + 1) * seed) * 43758.5453;
+    return x - Math.floor(x);
+  };
+  const gx = (i % NODE_COLS) - (NODE_COLS - 1) / 2;
+  const gz = Math.floor(i / NODE_COLS) - Math.floor(NODE_COUNT / NODE_COLS) / 2;
+  const x = gx * 1.7 + (rand(12.9898) - 0.5) * 1.0;
+  const z = gz * 1.7 + (rand(78.233) - 0.5) * 1.0;
   return {
     id: `node-${i}`,
-    type: i % 3 === 0 ? 'pontis-site' : 'par-system',
-    position: [Math.cos(angle) * radius, 0, Math.sin(angle) * radius] as [number, number, number],
-    isSubject: i === 0,
+    type: rand(3.317) > 0.62 ? 'pontis-site' : 'par-system',
+    position: [x, 0, z] as [number, number, number],
+    isSubject: i === 27, // one node, near the centre, is the subject seen in F01–F04
   };
 });
 
