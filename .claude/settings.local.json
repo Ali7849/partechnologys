@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/c/Users/hafiz/OneDrive/Desktop/PAR GROUP GLOBAL\")",
+      "Read(//c/Users/hafiz/OneDrive/Desktop//**)",
+      "Bash(npm --version)",
+      "Bash(git --version)",
+      "Bash(npx --yes create-next-app@latest . --ts --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --use-npm --skip-install --disable-git)",
+      "Bash(npx --yes create-next-app@latest par-group-global --ts --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --use-npm --skip-install --disable-git)",
+      "Bash(grep -vE '^\\\\.$|^\\\\.\\\\.$')",
+      "Bash(npm install *)",
+      "Bash(npx --yes shadcn@latest init -d -b neutral --yes --force)",
+      "Bash(npx --yes shadcn@latest init -d -b radix --yes --force)",
+      "Bash(node -e \"const p=require\\('lucide-react/package.json'\\); console.log\\('name:',p.name\\); console.log\\('version:',p.version\\); console.log\\('homepage:',p.homepage||'n/a'\\); console.log\\('repo:', \\(p.repository&&p.repository.url\\)||'n/a'\\)\")",
+      "Bash(node -e \"try{const m=require\\('lucide-react'\\); console.log\\('exports Menu:', typeof m.Menu, '| X:', typeof m.X, '| ArrowUpRight:', typeof m.ArrowUpRight, '| Mail:', typeof m.Mail\\)}catch\\(e\\){console.log\\('CJS require failed \\(ESM-only\\):', e.code\\)}\")"
+    ]
+  }
+}

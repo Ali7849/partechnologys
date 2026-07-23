@@ -1,0 +1,145 @@
+/**
+ * GENERATED FILE — do not edit by hand.
+ * Source: src/styles/tokens.ts · Generator: scripts/build-tokens.ts
+ * Regenerate with `npm run build:tokens`.
+ */
+
+:root {
+  /* colour — six values */
+  --cured: #D9DCD6;
+  --vellum: #EEEFEA;
+  --zinc: #8D9599;
+  --substrate: #101417;
+  --prussian: #16344E;
+  --fault: #A83226;
+
+  /* colour — derived */
+  --substrate-90: #1C2226;
+  --substrate-80: #2A3136;
+  --zinc-60: #B3B9BB;
+  --zinc-30: #CFD3D2;
+  --vellum-hair: #E3E5E0;
+  --prussian-tint: #E4E8EC;
+
+  /* elevation — the one permitted shadow (temporary elements only) */
+  --shadow-temp: 0 24px 48px -12px rgba(16,20,23,0.18), 0 2px 6px -2px rgba(16,20,23,0.10);
+
+  /* curtain-wall glass */
+  --glass-fill: rgba(217,220,214,0.72);
+  --glass-blur: 16px;
+  --glass-edge: 1px solid rgba(255,255,255,0.5);
+  --glass-mullion: 1px solid var(--zinc-30);
+
+  /* spacing — 8px module / 96px bay */
+  --m-05: 4px;
+  --m-1: 8px;
+  --m-2: 16px;
+  --m-3: 24px;
+  --m-4: 32px;
+  --m-6: 48px;
+  --m-8: 64px;
+  --bay: 96px;
+  --bay-15: 144px;
+  --bay-2: 192px;
+  --bay-3: 288px;
+  --bay-4: 384px;
+
+  /* radius — universal 2px */
+  --radius: 2px;
+
+  /* typography — families */
+  --font-display: var(--font-archivo);
+  --font-body: var(--font-source-serif);
+  --font-mono: var(--font-plex-mono);
+
+  /* typography — per-scale tokens */
+  --type-d1-family: var(--font-display);
+  --type-d1-size: clamp(4.5rem, 9vw, 9rem);
+  --type-d1-weight: 500;
+  --type-d1-tracking: -0.03em;
+  --type-d1-leading: 0.92;
+  --type-d2-family: var(--font-display);
+  --type-d2-size: clamp(3rem, 6vw, 5.5rem);
+  --type-d2-weight: 500;
+  --type-d2-tracking: -0.025em;
+  --type-d2-leading: 0.96;
+  --type-d3-family: var(--font-display);
+  --type-d3-size: clamp(2.25rem, 4vw, 3.5rem);
+  --type-d3-weight: 500;
+  --type-d3-tracking: -0.02em;
+  --type-d3-leading: 1.04;
+  --type-h1-family: var(--font-display);
+  --type-h1-size: 2rem;
+  --type-h1-weight: 500;
+  --type-h1-tracking: -0.015em;
+  --type-h1-leading: 1.15;
+  --type-h2-family: var(--font-display);
+  --type-h2-size: 1.5rem;
+  --type-h2-weight: 500;
+  --type-h2-tracking: -0.01em;
+  --type-h2-leading: 1.25;
+  --type-h3-family: var(--font-display);
+  --type-h3-size: 1.25rem;
+  --type-h3-weight: 600;
+  --type-h3-tracking: 0;
+  --type-h3-leading: 1.35;
+  --type-b1-family: var(--font-body);
+  --type-b1-size: 1.125rem;
+  --type-b1-weight: 400;
+  --type-b1-tracking: 0;
+  --type-b1-leading: 1.65;
+  --type-b1-measure: 68ch;
+  --type-b2-family: var(--font-body);
+  --type-b2-size: 1rem;
+  --type-b2-weight: 400;
+  --type-b2-tracking: 0;
+  --type-b2-leading: 1.7;
+  --type-b2-measure: 72ch;
+  --type-b3-family: var(--font-body);
+  --type-b3-size: 0.9375rem;
+  --type-b3-weight: 400;
+  --type-b3-tracking: 0;
+  --type-b3-leading: 1.65;
+  --type-b3-measure: 76ch;
+  --type-m1-family: var(--font-mono);
+  --type-m1-size: 0.875rem;
+  --type-m1-weight: 450;
+  --type-m1-tracking: 0.02em;
+  --type-m1-leading: 1.5;
+  --type-m2-family: var(--font-mono);
+  --type-m2-size: 0.75rem;
+  --type-m2-weight: 500;
+  --type-m2-tracking: 0.06em;
+  --type-m2-leading: 1.4;
+  --type-m3-family: var(--font-mono);
+  --type-m3-size: 0.6875rem;
+  --type-m3-weight: 500;
+  --type-m3-tracking: 0.1em;
+  --type-m3-leading: 1.4;
+
+  /* motion — durations (ms for CSS) */
+  --t-instant: 80ms;
+  --t-quick: 160ms;
+  --t-standard: 240ms;
+  --t-considered: 400ms;
+  --t-structural: 640ms;
+
+  /* motion — easings */
+  --ease-settle: cubic-bezier(0.16, 0.84, 0.24, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* grid */
+  --grid-columns: 12;
+  --grid-gutter: 24px;
+  --grid-content: 1440px;
+  --grid-full: 1680px;
+  --grid-rail: 64px;
+  --grid-rail-mobile: 32px;
+
+  /* breakpoints (informational; media queries use literal values) */
+  --bp-site: 1680px;
+  --bp-desk: 1280px;
+  --bp-tablet: 900px;
+  --bp-mobile: 600px;
+}
