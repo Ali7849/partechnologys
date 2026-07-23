@@ -41,7 +41,7 @@ export function Stage({ children }: { children?: React.ReactNode }) {
       orthographic
       frameloop="demand"
       dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      gl={{ antialias: true, alpha: true, stencil: true, powerPreference: 'high-performance' }}
       camera={{ position: iso.position, zoom: iso.zoom, near: 0.01, far: 200 }}
       style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1 }}
     >
