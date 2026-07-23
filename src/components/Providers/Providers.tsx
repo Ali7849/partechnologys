@@ -1,49 +1,27 @@
 'use client';
 
-import Lenis from 'lenis';
 import { useEffect } from 'react';
 
+import { ensureGsap } from '@/motion/ticker';
 import { useCapability } from '@/motion/useCapability';
-import { ensureGsap, gsap, ScrollTrigger } from '@/motion/ticker';
 
 /**
- * Providers — the one client boundary that runs page-wide setup, rendering no DOM of its
- * own beyond its children. It (1) resolves the capability level into the store, and
- * (2) initialises smooth scroll.
+ * Providers — the one client boundary that runs page-wide setup, rendering no DOM of its own.
+ * It (1) resolves the capability level into the store and (2) registers the single GSAP ticker.
  *
- * Note on Lenis: the original architecture rejected it; per the founder's stack decision
- * it is included, but gated — it is DISABLED under prefers-reduced-motion, and it is driven
- * from the single GSAP ticker (not its own rAF) with ScrollTrigger kept in sync, so the
- * "one rAF loop" rule holds. Native keyboard scroll and anchors continue to function.
+ * Native scroll is never touched (Motion Bible / CLAUDE.md Motion Law IV): no smooth-scroll
+ * library, no scroll hijacking, no second rAF loop. ScrollTrigger samples native scroll on the
+ * shared ticker; the only value ever smoothed is the animated one itself — F02's section-cut
+ * scrub — not the page scroll. Lenis was removed here because the documentation rejects it and
+ * no documented interaction requires it.
  */
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useCapability();
 
-  // Sets up GSAP + Lenis smooth scroll, synchronised on a single ticker. Torn down on unmount.
+  // Registers the single GSAP ticker + ScrollTrigger once, page-wide.
   useEffect(() => {
     ensureGsap();
-
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return;
-
-    const lenis = new Lenis({
-      duration: 1.1,
-      easing: (t) => 1 - Math.pow(1 - t, 3),
-      smoothWheel: true,
-      touchMultiplier: 1.5,
-    });
-
-    lenis.on('scroll', ScrollTrigger.update);
-
-    const tick = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
-
-    return () => {
-      gsap.ticker.remove(tick);
-      lenis.destroy();
-    };
   }, []);
 
   return <>{children}</>;
