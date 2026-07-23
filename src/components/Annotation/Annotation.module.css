@@ -1,0 +1,82 @@
+.item {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: baseline;
+  column-gap: var(--m-3);
+  padding-block: var(--m-2);
+  border-block-end: 1px solid var(--zinc-30);
+  border-radius: var(--radius);
+  cursor: default;
+  /* Colour only — nothing lifts, scales, or glows on hover (Motion forbidden list). */
+  transition: border-color var(--t-instant) var(--ease-move);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--prussian);
+  outline-offset: 2px;
+}
+
+.leader {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  inline-size: 64px;
+  block-size: 8px;
+}
+
+.leaderLine {
+  fill: none;
+  stroke: var(--zinc);
+  stroke-width: 1;
+  /* Drawn in by F03's timeline (stroke-dashoffset 1 → 0). Initial state: undrawn. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.leaderDot {
+  fill: var(--zinc);
+}
+
+.label {
+  grid-column: 2;
+  color: var(--zinc);
+}
+
+.value {
+  grid-column: 2;
+}
+
+.link {
+  color: var(--prussian);
+  text-decoration: none;
+  border-block-end: 1px solid currentColor;
+}
+
+/* Highlight: the annotation whose 3D component is lit. Colour shift only. */
+.active {
+  border-color: var(--prussian);
+}
+
+.active .leaderLine,
+.active .leaderDot {
+  stroke: var(--prussian);
+  fill: var(--prussian);
+}
+
+.active .label {
+  color: var(--prussian);
+}
+
+@media (max-width: 900px) {
+  .item {
+    grid-template-columns: 1fr;
+  }
+  /* Leader lines become short vertical stubs on mobile (BUILD_SPEC F03). */
+  .leader {
+    display: none;
+  }
+  .label,
+  .value {
+    grid-column: 1;
+  }
+}

@@ -1,0 +1,66 @@
+.frame {
+  position: relative;
+  min-block-size: 100vh;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: var(--grid-gutter);
+  align-items: center;
+  padding-inline: calc(var(--grid-rail) + var(--m-6));
+  padding-block: 72px 0;
+}
+
+.text {
+  grid-column: 1 / span 6;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-4);
+}
+
+.headline {
+  /* D1 comes from the Text primitive; nothing overridden here but layout. */
+  max-inline-size: 12ch;
+}
+
+.subject {
+  color: var(--zinc);
+}
+
+.object {
+  grid-column: 7 / span 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Reserves the slot even when empty (the WebGL subject shows through from behind). */
+  min-block-size: 50vh;
+  /* The one element permitted to touch the margin — reads as a placed object. */
+  margin-inline-end: calc(-1 * var(--m-6));
+}
+
+.cue {
+  position: absolute;
+  inset-block-end: var(--m-8);
+  inset-inline-start: calc(var(--grid-rail) + var(--m-6));
+}
+
+@media (max-width: 900px) {
+  .frame {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: var(--m-8);
+    padding-inline: calc(var(--grid-rail-mobile) + var(--m-3));
+  }
+  .text {
+    grid-column: 1;
+    order: 2;
+  }
+  .object {
+    grid-column: 1;
+    order: 1;
+    margin-inline-end: 0;
+    /* Object 60% viewport height on mobile (Wireframe Part 8). */
+    max-block-size: 60vh;
+  }
+  .cue {
+    inset-inline-start: calc(var(--grid-rail-mobile) + var(--m-3));
+  }
+}

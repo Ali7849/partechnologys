@@ -1,0 +1,51 @@
+.cue {
+  position: relative;
+  inline-size: 1px;
+  block-size: 32px;
+  /* Appears after the 2s hold — delayed fade-in. */
+  opacity: 0;
+  animation: cue-in var(--t-standard) var(--ease-settle) 3.52s forwards;
+}
+
+.line {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 1px;
+  background-color: var(--zinc);
+}
+
+.tick {
+  position: absolute;
+  inset-block-end: 0;
+  inline-size: 1px;
+  block-size: 8px;
+  background-color: var(--zinc);
+  animation: cue-travel 1.2s var(--ease-move) 3.72s infinite;
+}
+
+@keyframes cue-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cue-travel {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cue {
+    animation: none;
+    opacity: 1;
+  }
+  .tick {
+    animation: none;
+  }
+}

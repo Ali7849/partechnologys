@@ -1,0 +1,63 @@
+.frame {
+  position: relative;
+  min-block-size: 100vh;
+  display: grid;
+  align-items: end;
+  padding-block: var(--bay);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-6);
+  /* Sits low in the frame so the plan-view field reads above it. */
+  padding-block-start: 60vh;
+}
+
+.sentence {
+  max-inline-size: 22ch;
+}
+
+.legend {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-1);
+  border-block-start: 1px solid var(--zinc-30);
+  padding-block-start: var(--m-3);
+  max-inline-size: 46ch;
+}
+
+.legendRow {
+  display: grid;
+  grid-template-columns: var(--m-3) 16ch 1fr;
+  align-items: center;
+  column-gap: var(--m-2);
+}
+
+.marker {
+  inline-size: var(--m-1);
+  block-size: var(--m-1);
+  background-color: var(--zinc);
+  justify-self: center;
+}
+
+/* The subject: the Prussian diamond from the wireframe legend. */
+.markerSubject {
+  background-color: var(--prussian);
+  transform: rotate(45deg);
+}
+
+.legendLabel {
+  color: var(--zinc);
+}
+
+.legendValue {
+  justify-self: start;
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding-block-start: 50vh;
+  }
+}

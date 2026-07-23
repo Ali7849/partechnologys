@@ -1,0 +1,66 @@
+/* 1.5 viewport heights of scrub on desktop — the plane's full travel (BUILD_SPEC F02). */
+.frame {
+  position: relative;
+  block-size: 150vh;
+}
+
+/* The visible instrument stays pinned for the whole scrub. */
+.sticky {
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100vh;
+  overflow: hidden;
+}
+
+/* Full-viewport track the section line travels down, 0% → 100%. */
+.track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.plane {
+  position: absolute;
+  inset-inline: calc(var(--grid-rail) + var(--m-4)) calc(var(--grid-rail) + var(--m-4));
+  inset-block-start: 0;
+  block-size: 1px;
+  background-color: var(--prussian);
+  will-change: transform;
+}
+
+.planeTag {
+  position: absolute;
+  inset-block-start: var(--m-1);
+  inset-inline-end: 0;
+  color: var(--prussian);
+}
+
+.readout {
+  position: absolute;
+  inset-block-end: var(--m-8);
+  inset-inline-start: calc(var(--grid-rail) + var(--m-6));
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-05);
+}
+
+.readoutValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--type-d3-size);
+  line-height: 1;
+  color: var(--substrate);
+}
+
+@media (max-width: 900px) {
+  /* Shortened to 1.0 viewport height — the full 1.5 reads as sluggish on a phone. */
+  .frame {
+    block-size: 100vh;
+  }
+  .plane {
+    inset-inline: calc(var(--grid-rail-mobile) + var(--m-2)) var(--m-2);
+  }
+  .readout {
+    inset-inline-start: calc(var(--grid-rail-mobile) + var(--m-3));
+  }
+}

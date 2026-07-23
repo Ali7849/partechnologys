@@ -1,0 +1,7 @@
+.svg {
+  inline-size: 100%;
+  block-size: auto;
+  max-inline-size: 520px;
+  /* radius on media, per the reset — kept for consistency */
+  border-radius: 0;
+}

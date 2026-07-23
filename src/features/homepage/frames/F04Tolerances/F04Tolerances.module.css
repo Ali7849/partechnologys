@@ -1,0 +1,73 @@
+.frame {
+  position: relative;
+  min-block-size: 100vh;
+  display: grid;
+  align-items: center;
+  padding-inline: calc(var(--grid-rail) + var(--m-6));
+  padding-block: var(--bay);
+}
+
+.inner {
+  grid-column: 1;
+  inline-size: 100%;
+  max-inline-size: 62ch;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-4);
+}
+
+.heading {
+  color: inherit;
+}
+
+.specs {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 22ch 1fr;
+  align-items: baseline;
+  column-gap: var(--m-4);
+  padding-block: var(--m-3);
+  border-block-start: 1px solid var(--substrate-80);
+}
+
+.label {
+  grid-column: 1;
+}
+
+.value {
+  grid-column: 2;
+  color: inherit;
+}
+
+/* The refusal — the frame's most persuasive row. Given weight, not decoration. */
+.refusal {
+  border-block-start-width: 2px;
+  border-block-start-color: var(--zinc);
+  padding-block-start: var(--m-4);
+}
+
+.refusal .value {
+  font-family: var(--font-display);
+  font-size: var(--type-h3-size);
+}
+
+@media (max-width: 900px) {
+  .frame {
+    padding-inline: calc(var(--grid-rail-mobile) + var(--m-3));
+  }
+  /* Label stacked above value on mobile (BUILD_SPEC F04). */
+  .row {
+    grid-template-columns: 1fr;
+    row-gap: var(--m-1);
+  }
+  .label,
+  .value {
+    grid-column: 1;
+  }
+}

@@ -1,0 +1,24 @@
+.container {
+  inline-size: 100%;
+  max-inline-size: var(--grid-content);
+  margin-inline: auto;
+  padding-inline: calc(var(--grid-rail) + var(--m-6));
+  /* Width only — a compositor-friendly transition, structural duration (Motion). */
+  transition:
+    max-inline-size var(--t-structural) var(--ease-move),
+    padding-inline var(--t-structural) var(--ease-move);
+}
+
+.expanded {
+  max-inline-size: var(--grid-full);
+  padding-inline: var(--m-8);
+}
+
+/* Mobile: no expansion — the container stays bounded regardless of the expanded flag. */
+@media (max-width: 900px) {
+  .container,
+  .expanded {
+    max-inline-size: 100%;
+    padding-inline: calc(var(--grid-rail-mobile) + var(--m-3));
+  }
+}
