@@ -1,0 +1,95 @@
+.rail {
+  position: fixed;
+  inset-block: 72px 0; /* below the nav */
+  inline-size: var(--grid-rail);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--m-6);
+  pointer-events: none;
+  /* Retracts for F05's one full-bleed turn (transform/opacity only), returns for F06. */
+  transition:
+    transform var(--t-structural) var(--ease-move),
+    opacity var(--t-structural) var(--ease-move);
+}
+
+/* The rail retracts only for the single frame expansion (F05). Set on <body> by
+   FrameExpansion; reversed in F06. Desktop only — mobile has no right rail to retract. */
+:global(body[data-frame='full']) .left {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+:global(body[data-frame='full']) .right {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.left {
+  inset-inline-start: 0;
+  border-inline-end: 1px solid var(--zinc-30);
+}
+
+.right {
+  inset-inline-end: 0;
+  border-inline-start: 1px solid var(--zinc-30);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  block-size: 100%;
+  inline-size: 100%;
+}
+
+.top,
+.bottom {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--font-mono);
+  font-size: var(--type-m3-size);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--zinc);
+}
+
+.bottom {
+  transform: rotate(180deg);
+}
+
+.sound {
+  position: absolute;
+  inset-block-end: var(--m-6);
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: var(--type-m3-size);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--zinc);
+  pointer-events: auto;
+  transition: color var(--t-quick) var(--ease-settle);
+}
+
+.sound:hover,
+.sound[aria-pressed='true'] {
+  color: var(--prussian);
+}
+
+/* Below 900px the right rail is removed entirely; the left collapses to 32px. */
+@media (max-width: 900px) {
+  .right {
+    display: none;
+  }
+  .left {
+    inline-size: var(--grid-rail-mobile);
+  }
+  .bottom,
+  .sound {
+    display: none;
+  }
+}

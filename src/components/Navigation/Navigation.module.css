@@ -1,0 +1,165 @@
+.nav {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 100;
+  block-size: 72px;
+  display: flex;
+  align-items: center;
+  gap: var(--m-6);
+  padding-inline: var(--grid-rail);
+  background-color: var(--cured);
+  border-block-end: 1px solid var(--zinc-30);
+  transition:
+    background-color var(--t-standard) var(--ease-move),
+    backdrop-filter var(--t-standard) var(--ease-move);
+}
+
+/* Curtain wall — the glass state on scroll. Visible mullion beneath. */
+.scrolled {
+  background-color: var(--glass-fill);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-block-end-color: var(--zinc-30);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .scrolled {
+    background-color: var(--cured);
+  }
+}
+
+.lockup {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  font-variation-settings: 'wdth' 100;
+  color: var(--substrate);
+  white-space: nowrap;
+}
+
+.items {
+  display: flex;
+  align-items: center;
+  gap: var(--m-4);
+  margin-inline-start: auto;
+  list-style: none;
+}
+
+.item,
+.commission {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: var(--type-m2-size);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--substrate);
+  padding-block: var(--m-1);
+}
+
+/* Underline draws left→right on hover (160ms). Nothing moves. */
+.item::after {
+  content: '';
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  block-size: 1px;
+  inline-size: 100%;
+  background-color: var(--prussian);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-quick) var(--ease-settle);
+}
+
+.item:hover::after,
+.item[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+.item[aria-current='page'] {
+  color: var(--prussian);
+}
+
+.commission {
+  color: var(--prussian);
+  border: 1px solid var(--prussian);
+  border-radius: var(--radius);
+  padding: var(--m-1) var(--m-3);
+  transition: background-color var(--t-instant) var(--ease-settle);
+}
+
+.commission:hover {
+  background-color: var(--prussian-tint);
+}
+
+.menuToggle {
+  display: none;
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: var(--type-m2-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--substrate);
+}
+
+/* ── Mobile menu — full-plane, Substrate ground ── */
+.mobileMenu {
+  position: fixed;
+  inset: 72px 0 0 0;
+  z-index: 99;
+  background-color: var(--substrate);
+  padding: var(--m-8) var(--grid-rail-mobile);
+  transform: translateY(-8px);
+  opacity: 0;
+  transition:
+    opacity var(--t-standard) var(--ease-settle),
+    transform var(--t-standard) var(--ease-settle);
+}
+
+.mobileMenuOpen {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mobileItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-4);
+  list-style: none;
+}
+
+.mobileItem,
+.mobileCommission {
+  font-family: var(--font-display);
+  font-size: var(--type-d3-size);
+  font-weight: 500;
+  color: var(--cured);
+}
+
+.mobileCommission {
+  color: var(--prussian-tint);
+  margin-block-start: var(--m-6);
+}
+
+/* No hamburger above 900px — a desktop hamburger hides a layout not designed properly. */
+@media (max-width: 900px) {
+  .nav {
+    padding-inline: var(--grid-rail-mobile);
+    gap: var(--m-3);
+  }
+  .items,
+  .commission {
+    display: none;
+  }
+  .menuToggle {
+    display: block;
+  }
+}
+
+@media (min-width: 901px) {
+  .mobileMenu {
+    display: none;
+  }
+}
