@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, Source_Serif_4, IBM_Plex_Mono } from 'next/font/google';
 
-import { Navigation } from '@/components/Navigation/Navigation';
+import { CommandPalette } from '@/components/CommandPalette/CommandPalette';
 import { Providers } from '@/components/Providers/Providers';
-import { Rail } from '@/components/Rail/Rail';
 
 import '@/styles/tokens.css';
 import '@/styles/reset.css';
@@ -37,26 +36,26 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://partechnologys.com'),
   title: {
-    default: 'PAR TECHNOLOGYS — We build systems that hold.',
+    default: 'PAR TECHNOLOGYS — Intelligence, software, and the systems businesses run on.',
     template: '%s — PAR TECHNOLOGYS',
   },
   description:
-    'PAR TECHNOLOGYS engineers the operational systems that industrial, infrastructure, and service organisations depend on — built to structural standards, built to be inherited.',
+    'PAR TECHNOLOGYS builds AI systems, custom software, cloud infrastructure, data platforms, and the digital experiences on top of them — for companies that need systems they can depend on.',
   applicationName: 'PAR TECHNOLOGYS',
   authors: [{ name: 'PAR TECHNOLOGYS' }],
   openGraph: {
     type: 'website',
-    title: 'PAR TECHNOLOGYS — We build systems that hold.',
+    title: 'PAR TECHNOLOGYS — Intelligence, software, and the systems businesses run on.',
     description:
-      'An engineering practice that builds load-bearing software. A PAR Group Global company.',
+      'AI, software, business transformation, digital experiences, cloud, data, and growth — engineered end to end.',
     siteName: 'PAR TECHNOLOGYS',
   },
   robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#D9DCD6',
-  colorScheme: 'light',
+  themeColor: '#08090B',
+  colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
 };
@@ -70,12 +69,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#content" className="skip-link">
           Skip to content
         </a>
-        <div id="top-sentinel" aria-hidden="true" />
         <Providers>
-          <Navigation />
-          <Rail side="left" />
-          <Rail side="right" />
           <main id="content">{children}</main>
+          <CommandPalette />
         </Providers>
       </body>
     </html>
