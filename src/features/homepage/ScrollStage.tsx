@@ -24,6 +24,13 @@ import styles from './ScrollStage.module.css';
 export function ScrollStage() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  // The galaxy gets the opening to itself — no copy competes with it for the first beats.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setReady(true), 3400);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -64,7 +71,7 @@ export function ScrollStage() {
             id={scene.id}
             className={[
               styles.caption,
-              i === active ? styles.active : '',
+              ready && i === active ? styles.active : '',
               scene.kind === 'close' ? styles.centred : '',
             ]
               .filter(Boolean)

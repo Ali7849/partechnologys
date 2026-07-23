@@ -6,7 +6,7 @@ import { Vector3 } from 'three';
 
 import { useWorld } from '@/state/useWorld';
 
-import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT } from './scenes';
+import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT, birthAt } from './scenes';
 
 /**
  * WORLD CAMERA — the single continuous shot.
@@ -19,8 +19,6 @@ import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT } from './scenes';
  *
  * Position is damped rather than snapped, which is what gives the move its weight.
  */
-
-const IDLE_FADE = 0.05; // scroll fraction over which the autonomous orbit hands off to the path
 
 export function WorldCamera() {
   const camera = useThree((s) => s.camera);
@@ -41,8 +39,13 @@ export function WorldCamera() {
 
     CAMERA_PATH.getPointAt(p, pos);
 
-    // Autonomous orbit + dolly, strongest at the opening and gone once the journey starts.
-    const idle = 1 - Math.min(1, p / IDLE_FADE);
+    // THE APPROACH — at rest the camera sits far out with the whole spiral in frame, then
+    // closes on the core as the galaxy gives birth to it, arriving exactly as the path begins.
+    const reveal = birthAt(progress);
+    pos.multiplyScalar(1 + (1 - reveal) * 1.55);
+
+    // Autonomous orbit + dolly while the galaxy still holds the frame.
+    const idle = 1 - reveal;
     if (idle > 0.001) {
       const a = time.current * 0.06 * idle;
       const cos = Math.cos(a);

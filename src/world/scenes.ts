@@ -91,6 +91,19 @@ export const LOOK_TARGETS: [number, number, number][] = [
 export const SCENE_COUNT = SCENES.length;
 
 /**
+ * THE BIRTH — the opening sequence occupies the first slice of the journey. Across it the
+ * spiral galaxy breaks apart, most of its mass disperses into the nebula, a small fraction is
+ * captured into orbit around the core, and the camera closes in. 0 = untouched galaxy,
+ * 1 = core fully born and the spline journey proper begins.
+ */
+export const BIRTH_SPAN = 0.11;
+
+export function birthAt(progress: number): number {
+  const t = Math.min(1, Math.max(0, progress / BIRTH_SPAN));
+  return t * t * (3 - 2 * t); // smoothstep
+}
+
+/**
  * The two scene accents the camera is currently between, and how far between them it is —
  * so the whole environment can bleed from one world's colour into the next continuously.
  */

@@ -10,36 +10,41 @@ import {
   Vignette,
 } from '@react-three/postprocessing';
 import { useEffect, useMemo } from 'react';
-import { Vector2 } from 'three';
+import { ACESFilmicToneMapping, HalfFloatType, Vector2 } from 'three';
 
 import { useWorld } from '@/state/useWorld';
 
 import { CosmicEnvironment } from './CosmicEnvironment';
+import { Galaxy } from './Galaxy';
 import { HeroCore } from './HeroCore';
 import { WorldCamera } from './WorldCamera';
 
 /**
  * THE WORLD — one persistent 3D space the entire experience takes place inside.
  *
- * It is mounted once, fixed, behind every piece of content, and never unmounts: scrolling
- * moves the camera through it rather than swapping sections. Reflections come from a
- * procedural lightformer rig (no HDRI fetch), so the core is lit by shapes we authored and
- * every camera move re-lights it.
+ * Mounted once, fixed, behind every piece of content, and never unmounted: scrolling moves the
+ * camera through it rather than swapping sections.
  *
- * The post stack is what makes it read as film rather than WebGL: bloom on the emissive core
- * and nebula, depth of field so the world has a focal plane, a whisper of chromatic
- * aberration at the edges, and a vignette to hold the eye centre-frame.
+ * Render quality is tuned for a 4K panel rather than a demo: ACES Filmic tone mapping so
+ * highlights roll off like film instead of clipping, half-float render targets so the bloom
+ * has real HDR headroom to work from, 4× MSAA in the composer, and pixel ratio allowed up to
+ * 2 (clamped, so a 4K display gets true resolution without melting a laptop GPU).
+ *
+ * The post stack is deliberately restrained: bloom that GLOWS rather than washes, a shallow
+ * depth of field that keeps the core crisp, and only a whisper of aberration at the edges.
  */
 
 function Post() {
-  const aberration = useMemo(() => new Vector2(0.0007, 0.0009), []);
+  const aberration = useMemo(() => new Vector2(0.0004, 0.0006), []);
 
   return (
-    <EffectComposer multisampling={0}>
-      <DepthOfField focusDistance={0.015} focalLength={0.05} bokehScale={3.5} height={480} />
-      <Bloom intensity={1.15} luminanceThreshold={0.2} luminanceSmoothing={0.5} mipmapBlur />
-      <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.35} />
-      <Vignette eskil={false} offset={0.25} darkness={0.75} />
+    <EffectComposer multisampling={4} frameBufferType={HalfFloatType}>
+      {/* shallow — atmosphere at depth, never a blurred subject */}
+      <DepthOfField focusDistance={0.008} focalLength={0.018} bokehScale={1.1} height={700} />
+      {/* tight radius + high threshold: only genuinely hot pixels bloom */}
+      <Bloom intensity={0.85} luminanceThreshold={0.42} luminanceSmoothing={0.18} radius={0.62} mipmapBlur />
+      <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.45} />
+      <Vignette eskil={false} offset={0.3} darkness={0.62} />
     </EffectComposer>
   );
 }
@@ -62,25 +67,33 @@ export function World() {
       style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
     >
       <Canvas
-        dpr={[1, 1.75]}
-        camera={{ position: [0, 0.8, 10.5], fov: 42, near: 0.1, far: 220 }}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        dpr={[1, 2]}
+        camera={{ position: [0, 2.4, 26], fov: 42, near: 0.1, far: 400 }}
+        gl={{
+          antialias: false, // the composer's MSAA does this better
+          alpha: false,
+          stencil: false,
+          powerPreference: 'high-performance',
+          toneMapping: ACESFilmicToneMapping,
+          toneMappingExposure: 1.05,
+        }}
       >
         <CosmicEnvironment />
         <WorldCamera />
+        <Galaxy />
         <HeroCore />
 
         {/* key + fill, kept low so the lightformer reflections do the describing */}
-        <ambientLight intensity={0.28} />
-        <directionalLight position={[6, 7, 5]} intensity={1.1} color="#CFE0FF" />
-        <directionalLight position={[-7, -3, -4]} intensity={0.45} color="#4E6BA8" />
+        <ambientLight intensity={0.24} />
+        <directionalLight position={[6, 7, 5]} intensity={1.25} color="#CFE0FF" />
+        <directionalLight position={[-7, -3, -4]} intensity={0.5} color="#4E6BA8" />
 
         {/* procedural reflection rig — authored shapes, no HDRI request */}
-        <Environment resolution={256}>
-          <Lightformer form="rect" intensity={3.2} position={[0, 6, -8]} scale={[12, 6, 1]} color="#A9C6FF" />
-          <Lightformer form="rect" intensity={2.1} position={[-8, 1, 4]} scale={[8, 8, 1]} rotation={[0, Math.PI / 2, 0]} color="#7AA2F7" />
-          <Lightformer form="rect" intensity={1.6} position={[8, -2, 2]} scale={[8, 8, 1]} rotation={[0, -Math.PI / 2, 0]} color="#5A76B8" />
-          <Lightformer form="ring" intensity={2.4} position={[3, 4, 6]} scale={5} color="#FFFFFF" />
+        <Environment resolution={512}>
+          <Lightformer form="rect" intensity={3.4} position={[0, 6, -8]} scale={[12, 6, 1]} color="#A9C6FF" />
+          <Lightformer form="rect" intensity={2.2} position={[-8, 1, 4]} scale={[8, 8, 1]} rotation={[0, Math.PI / 2, 0]} color="#7AA2F7" />
+          <Lightformer form="rect" intensity={1.7} position={[8, -2, 2]} scale={[8, 8, 1]} rotation={[0, -Math.PI / 2, 0]} color="#5A76B8" />
+          <Lightformer form="ring" intensity={2.6} position={[3, 4, 6]} scale={5} color="#FFFFFF" />
         </Environment>
 
         <Post />

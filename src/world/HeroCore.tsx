@@ -7,7 +7,7 @@ import { AdditiveBlending, BackSide, Color, type Group, type Mesh, type MeshBasi
 
 import { useWorld } from '@/state/useWorld';
 
-import { accentAt } from './scenes';
+import { accentAt, birthAt } from './scenes';
 
 /**
  * HERO CORE — the heart of the world.
@@ -23,10 +23,12 @@ import { accentAt } from './scenes';
  */
 
 export function HeroCore() {
+  const root = useRef<Group>(null);
   const spin = useRef<Group>(null);
   const shell = useRef<Group>(null);
   const emissive = useRef<Mesh>(null);
   const halo = useRef<Mesh>(null);
+  const born = useRef(0);
 
   const accentColor = useMemo(() => new Color('#7AA2F7'), []);
   const target = useMemo(() => new Color(), []);
@@ -34,6 +36,16 @@ export function HeroCore() {
 
   // Continuous rotation + counter-rotating shell, and the emissive shard takes the scene accent.
   useFrame((_, dt) => {
+    // The core is born out of the galaxy: it only begins to exist once the spiral has broken
+    // apart, then scales up as the captured particles wrap it.
+    const reveal = birthAt(useWorld.getState().progress);
+    const t = Math.min(1, Math.max(0, (reveal - 0.32) / 0.68));
+    born.current += (t * t * (3 - 2 * t) - born.current) * Math.min(1, dt * 3);
+    if (root.current) {
+      root.current.scale.setScalar(Math.max(0.0001, born.current));
+      root.current.visible = born.current > 0.01;
+    }
+
     if (spin.current) {
       spin.current.rotation.y += dt * 0.22;
       spin.current.rotation.x += dt * 0.05;
@@ -60,7 +72,7 @@ export function HeroCore() {
 
   return (
     <Float speed={1.1} rotationIntensity={0.16} floatIntensity={0.7} floatingRange={[-0.14, 0.14]}>
-      <group>
+      <group ref={root}>
         {/* polished core — reflections come entirely from the lightformer rig */}
         <group ref={spin}>
           <mesh castShadow receiveShadow>
