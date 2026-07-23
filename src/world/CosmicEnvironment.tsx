@@ -87,13 +87,14 @@ const fragmentShader = /* glsl */ `
     vec3 deep  = vec3(0.016, 0.020, 0.035);
     vec3 cool  = vec3(0.10, 0.16, 0.42);
 
-    // Held back deliberately: this is the atmosphere BEHIND the galaxy, never the subject.
+    // The nebula is the base environment for the WHOLE experience — it never recedes and
+    // never disappears; the starfield lives inside it.
     vec3 col = deep;
-    col += cool   * wisp   * 0.20;
-    col += accent * nebula * 0.32;
+    col += cool   * wisp   * 0.34;
+    col += accent * nebula * 0.62;
 
     // Light scattering — the nebula cores bloom brighter than their edges.
-    col += accent * pow(nebula, 3.0) * 0.26;
+    col += accent * pow(nebula, 3.0) * 0.5;
 
     // Vertical falloff so the world has a floor and a sky rather than uniform soup.
     float band = smoothstep(-0.85, 0.55, dir.y);

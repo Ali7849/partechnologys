@@ -1,7 +1,7 @@
 'use client';
 
-import { Environment, Lightformer } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { Environment, Lightformer, PerformanceMonitor, Preload } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
 import {
   Bloom,
   ChromaticAberration,
@@ -15,36 +15,57 @@ import { ACESFilmicToneMapping, HalfFloatType, Vector2 } from 'three';
 import { useWorld } from '@/state/useWorld';
 
 import { CosmicEnvironment } from './CosmicEnvironment';
-import { Galaxy } from './Galaxy';
 import { HeroCore } from './HeroCore';
+import { Starfield } from './Starfield';
 import { WorldCamera } from './WorldCamera';
 
 /**
- * THE WORLD — one persistent 3D space the entire experience takes place inside.
+ * THE WORLD — one persistent 3D space the entire experience takes place inside. Mounted once,
+ * fixed, behind every piece of content, never unmounted.
  *
- * Mounted once, fixed, behind every piece of content, and never unmounted: scrolling moves the
- * camera through it rather than swapping sections.
- *
- * Render quality is tuned for a 4K panel rather than a demo: ACES Filmic tone mapping so
- * highlights roll off like film instead of clipping, half-float render targets so the bloom
- * has real HDR headroom to work from, 4× MSAA in the composer, and pixel ratio allowed up to
- * 2 (clamped, so a 4K display gets true resolution without melting a laptop GPU).
- *
- * The post stack is deliberately restrained: bloom that GLOWS rather than washes, a shallow
- * depth of field that keeps the core crisp, and only a whisper of aberration at the edges.
+ * Render quality targets a 4K panel: ACES Filmic tone mapping so highlights roll off like film
+ * instead of clipping, half-float targets so bloom has real HDR headroom, 4× MSAA, and pixel
+ * ratio up to 2 — but every one of those is governed at runtime (below) rather than fixed, so
+ * the experience stays at framerate on weaker GPUs instead of looking good and running badly.
  */
+
+/**
+ * Adaptive quality. Measures real framerate and walks pixel ratio and starfield density up or
+ * down gradually — never in a visible jump. Recovery is automatic when headroom returns.
+ */
+function Governor() {
+  const setDpr = useThree((s) => s.setDpr);
+  const setQuality = useWorld((s) => s.setQuality);
+
+  return (
+    <PerformanceMonitor
+      ms={200}
+      iterations={6}
+      step={0.15}
+      onChange={({ factor }) => {
+        // 1 → 2 in small increments so the resolution shift is imperceptible.
+        setDpr(Math.round((1 + factor) * 20) / 20);
+        setQuality(factor);
+      }}
+      onFallback={() => {
+        setDpr(1);
+        setQuality(0);
+      }}
+    />
+  );
+}
 
 function Post() {
   const aberration = useMemo(() => new Vector2(0.0004, 0.0006), []);
 
   return (
     <EffectComposer multisampling={4} frameBufferType={HalfFloatType}>
-      {/* shallow — atmosphere at depth, never a blurred subject */}
-      <DepthOfField focusDistance={0.008} focalLength={0.018} bokehScale={1.1} height={700} />
+      {/* subtle, and focused on the core — distance softens, the subject never does */}
+      <DepthOfField focusDistance={0.026} focalLength={0.035} bokehScale={1.0} height={640} />
       {/* tight radius + high threshold: only genuinely hot pixels bloom */}
-      <Bloom intensity={0.85} luminanceThreshold={0.42} luminanceSmoothing={0.18} radius={0.62} mipmapBlur />
+      <Bloom intensity={0.8} luminanceThreshold={0.45} luminanceSmoothing={0.16} radius={0.6} mipmapBlur />
       <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.45} />
-      <Vignette eskil={false} offset={0.3} darkness={0.62} />
+      <Vignette eskil={false} offset={0.3} darkness={0.6} />
     </EffectComposer>
   );
 }
@@ -73,14 +94,17 @@ export function World() {
           antialias: false, // the composer's MSAA does this better
           alpha: false,
           stencil: false,
+          depth: true,
           powerPreference: 'high-performance',
           toneMapping: ACESFilmicToneMapping,
           toneMappingExposure: 1.05,
         }}
       >
+        <Governor />
+
         <CosmicEnvironment />
         <WorldCamera />
-        <Galaxy />
+        <Starfield />
         <HeroCore />
 
         {/* key + fill, kept low so the lightformer reflections do the describing */}
@@ -89,7 +113,7 @@ export function World() {
         <directionalLight position={[-7, -3, -4]} intensity={0.5} color="#4E6BA8" />
 
         {/* procedural reflection rig — authored shapes, no HDRI request */}
-        <Environment resolution={512}>
+        <Environment resolution={256}>
           <Lightformer form="rect" intensity={3.4} position={[0, 6, -8]} scale={[12, 6, 1]} color="#A9C6FF" />
           <Lightformer form="rect" intensity={2.2} position={[-8, 1, 4]} scale={[8, 8, 1]} rotation={[0, Math.PI / 2, 0]} color="#7AA2F7" />
           <Lightformer form="rect" intensity={1.7} position={[8, -2, 2]} scale={[8, 8, 1]} rotation={[0, -Math.PI / 2, 0]} color="#5A76B8" />
@@ -97,6 +121,9 @@ export function World() {
         </Environment>
 
         <Post />
+
+        {/* Compiles every shader before the first frame — no hitching during the intro. */}
+        <Preload all />
       </Canvas>
     </div>
   );
