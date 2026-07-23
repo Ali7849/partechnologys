@@ -9,22 +9,8 @@
   isolation: isolate;
 }
 
-/* The world — an accent field that gives each pillar its own atmosphere. */
-.field {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(60% 55% at 78% 30%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%),
-    radial-gradient(50% 50% at 12% 82%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 72%);
-  opacity: 0;
-  transform: scale(1.08);
-  transition:
-    opacity 1200ms cubic-bezier(0.16, 0.84, 0.24, 1),
-    transform 1600ms cubic-bezier(0.16, 0.84, 0.24, 1);
-}
-
-/* A faint engineered lattice — structure under the atmosphere. */
+/* A faint engineered lattice — structure under the atmosphere.
+   (The atmosphere itself is the fullscreen aurora shader, which tints to this pillar's accent.) */
 .grid {
   position: absolute;
   inset: 0;
@@ -36,11 +22,6 @@
   mask-image: radial-gradient(75% 65% at 70% 40%, #000 20%, transparent 78%);
   opacity: 0;
   transition: opacity 1400ms cubic-bezier(0.16, 0.84, 0.24, 1);
-}
-
-.revealed .field {
-  opacity: 1;
-  transform: scale(1);
 }
 
 .revealed .grid {
@@ -85,11 +66,7 @@
   letter-spacing: -0.03em;
   text-wrap: balance;
   color: #F2F4F7;
-  opacity: 0;
-  transform: translateY(22px);
-  transition:
-    opacity 900ms ease 90ms,
-    transform 900ms cubic-bezier(0.16, 0.84, 0.24, 1) 90ms;
+  /* Motion is owned by SplitText's per-character reveal — no container fade to fight it. */
 }
 
 .lead {
@@ -106,7 +83,6 @@
 }
 
 .revealed .index,
-.revealed .title,
 .revealed .lead {
   opacity: 1;
   transform: translateY(0);

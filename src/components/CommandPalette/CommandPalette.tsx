@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { COMMISSION_EMAIL, PILLARS } from '@/features/homepage/content/pillars';
+import { scrollToTarget } from '@/motion/lenis';
 
 import styles from './CommandPalette.module.css';
 
@@ -25,7 +26,7 @@ type Command = {
 };
 
 function scrollTo(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  scrollToTarget(`#${id}`);
 }
 
 // The seven pillars are the modules; everything else is an action.
@@ -42,7 +43,7 @@ const COMMANDS: Command[] = [
     label: 'Return to the opening',
     hint: '↑',
     group: 'ACTION',
-    run: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    run: () => scrollToTarget(0),
   },
   {
     id: 'commission',

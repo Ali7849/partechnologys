@@ -1,8 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { useExperience } from '@/state/useExperience';
 
 import styles from './Opening.module.css';
+
+const OPENING_ACCENT = '#7AA2F7';
 
 /**
  * OPENING — the entry into PAR//OS. Not a hero section: a system coming online. The wordmark
@@ -14,6 +18,7 @@ const THESIS = 'We do not sell services. We build the systems other companies ar
 
 export function Opening() {
   const [live, setLive] = useState(false);
+  const ref = useRef<HTMLElement>(null);
 
   // Comes online just after mount, so the entry reads as a system booting rather than a page load.
   useEffect(() => {
@@ -21,12 +26,30 @@ export function Opening() {
     return () => window.clearTimeout(id);
   }, []);
 
+  // Returns the environment to the opening's accent whenever it holds the viewport.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.35) {
+            useExperience.getState().setAccent(OPENING_ACCENT);
+          }
+        }
+      },
+      { threshold: [0.35, 0.6] },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={ref}
       className={[styles.opening, live ? styles.live : ''].filter(Boolean).join(' ')}
       aria-labelledby="opening-title"
     >
-      <div className={styles.field} aria-hidden="true" />
       <div className={styles.grid} aria-hidden="true" />
 
       <div className={styles.inner}>

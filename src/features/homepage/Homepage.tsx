@@ -1,3 +1,5 @@
+import { AuroraFieldLazy } from '@/three/AuroraFieldLazy';
+
 import { Closing } from './Closing';
 import { Opening } from './Opening';
 import { PILLARS } from './content/pillars';
@@ -16,6 +18,7 @@ import { PillarSection } from './pillars/PillarSection';
 export function Homepage() {
   return (
     <>
+      <AuroraFieldLazy />
       <Opening />
       {PILLARS.map((pillar) => (
         <PillarSection key={pillar.id} pillar={pillar} />
