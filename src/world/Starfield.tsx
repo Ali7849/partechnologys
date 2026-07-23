@@ -82,28 +82,27 @@ const vertexShader = /* glsl */ `
   }
 
   void main() {
-    // ── ACT 1 · the vortex ───────────────────────────────────────────────────
-    // An EYE SEEN FROM THE SIDE: a long horizontal lens with pointed ends, not a ring.
-    // sign(sin t) * |sin t|^p collapses the vertical extent to a point at t = 0 and t = PI,
-    // which is what produces the sharp corners of the eye rather than a rounded ellipse.
-    float band   = pow(aRandom.x, 0.55);          // which shell of the portal wall
+    // ── ACT 1 · the iris ─────────────────────────────────────────────────────
+    // A COSMIC IRIS: a circular annulus of particles orbiting a perfectly black void. The
+    // pupil is empty geometry — nothing is ever placed inside it, so it emits exactly zero
+    // and reads as an event horizon. All visible energy comes from the particles around it.
+    // Density is weighted toward the inner edge, the way an accretion disc actually loads.
+    float band   = pow(aRandom.x, 1.7);           // 0 = inner rim, 1 = outer edge
     float radial = band;
 
-    float breathe = 1.0 + 0.09 * sin(uTime * 0.33);
-    float stretch = 1.0 + 0.12 * sin(uTime * 0.21 + 1.3);
-    float squash  = 1.0 + 0.08 * sin(uTime * 0.27 + 2.1);
+    float breathe = 1.0 + 0.055 * sin(uTime * 0.33);
 
-    // Energy FLOWS around the contour — the shape stays put while light streams through it,
-    // so it reads as a living portal instead of a spinning object.
-    float t = aRandom.z * 6.2831 + uTime * uSpin * (0.50 + band * 0.55);
-    float s = sin(t);
-    float taper = sign(s) * pow(abs(s), 1.75);
+    float rad = 1.62 + band * 3.55;               // void radius 1.62 → outer 5.17
 
-    float shell = 0.80 + band * 0.36;
+    // Differential 360° rotation: the inner rim laps the outer, so the ring shears into
+    // streams on its own rather than turning like a solid wheel.
+    float t = aRandom.z * 6.2831 + uTime * uSpin * (1.15 / (0.45 + rad * 0.30));
+
+    // Built face-on to the camera, very slightly elliptical, thin in depth.
     vec3 vortex = vec3(
-      cos(t) * 4.75 * shell * stretch,
-      taper  * 1.42 * shell * breathe,
-      (aRandom.y - 0.5) * (0.22 + band * 0.62) * squash
+      cos(t) * rad * breathe,
+      sin(t) * rad * breathe * 0.94,
+      (aRandom.y - 0.5) * (0.10 + band * 0.62)
     );
 
     // Sits right of centre, drifting back to centre as it opens into the gateway.
@@ -152,20 +151,24 @@ const vertexShader = /* glsl */ `
     // ── Look ─────────────────────────────────────────────────────────────────
     // Microscopic. Roughly a fifth of the previous footprint, which is also the single
     // largest saving in blended fill rate.
+    // TEMPORAL STABILITY — the floor of 1.0 device pixel is deliberate. A point smaller than
+    // one pixel does not render smaller, it flickers as it drifts across the sample grid, and
+    // with 400k of them that shimmer is the single worst artefact in the frame. Clamping to a
+    // whole pixel and carrying brightness in alpha instead keeps the field rock steady.
     float sizeSeed = aRandom.x;
     float bright = step(0.991, sizeSeed);
     float size = (0.09 + sizeSeed * 0.15) + bright * 0.32;
-    gl_PointSize = clamp(size * (95.0 / dist), 0.62, 1.75) * uPixelRatio;
+    gl_PointSize = max(clamp(size * (95.0 / dist), 0.0, 2.6) * uPixelRatio, 1.0);
 
-    // Stellar temperature ramp — four stops rather than a blue↔white lerp, so the field has
-    // real colour depth: hot blue giants through white to amber and rare deep-orange stars.
+    // Cinematic grade: deep saturated blue → cyan → violet, with white held back for only
+    // the rarest highlights. Previously most of the field sat near white, which is exactly
+    // what washed the scene out — saturation is what makes it read as expensive.
     float temp = aRandom.y;
-    vec3 c = vec3(0.42, 0.58, 1.00);
-    c = mix(c, vec3(0.70, 0.82, 1.00), smoothstep(0.00, 0.35, temp));
-    c = mix(c, vec3(1.00, 0.99, 0.96), smoothstep(0.32, 0.72, temp));
-    c = mix(c, vec3(1.00, 0.86, 0.66), smoothstep(0.74, 0.93, temp));
-    c = mix(c, vec3(1.00, 0.62, 0.38), smoothstep(0.94, 1.00, temp));
-    c = mix(c, uAccent, smoothstep(45.0, 90.0, dist) * 0.35);
+    vec3 c = vec3(0.10, 0.28, 0.92);                                        // deep blue
+    c = mix(c, vec3(0.18, 0.70, 1.00), smoothstep(0.00, 0.44, temp));       // cyan
+    c = mix(c, vec3(0.52, 0.44, 1.00), smoothstep(0.44, 0.80, temp));       // violet
+    c = mix(c, vec3(0.94, 0.97, 1.00), smoothstep(0.93, 1.00, temp));       // white, rare
+    c = mix(c, uAccent, smoothstep(45.0, 90.0, dist) * 0.30);
     c = mix(c, uAccent * 1.6 + 0.3, captured * uHero);
 
     // HDR — the brightest particles sit well above 1.0 so bloom has real energy to gather.
@@ -173,7 +176,8 @@ const vertexShader = /* glsl */ `
     vColor = c * (1.15 + bright * 3.2);
 
     float lum = 0.26 + pow(temp, 1.7) * 0.62 + bright * 0.5;
-    float twinkle = 0.74 + 0.26 * sin(uTime * (0.6 + aRandom.z * 1.8) + aRandom.x * 30.0);
+    // Gentler twinkle — high amplitude on a 400k field reads as noise, not stars.
+    float twinkle = 0.86 + 0.14 * sin(uTime * (0.6 + aRandom.z * 1.8) + aRandom.x * 30.0);
     float depthFade = 1.0 - smoothstep(52.0, 96.0, dist);
     float nearFade = smoothstep(1.0, 3.5, dist);
 
@@ -189,16 +193,15 @@ const fragmentShader = /* glsl */ `
   varying float vAlpha;
 
   void main() {
-    // Two-lobe optical profile: a tight core plus a wide, faint halo. This is what real
-    // lenses do with point light, and it is why the accumulation reads as luminous energy
-    // rather than a field of flat discs. No hard rim, so nothing ever looks like a sprite.
+    // A single tight core, no wide halo. The halo lobe was what smeared white haze across
+    // the frame once thousands of particles accumulated — bloom should build the glow, not
+    // the sprite. Polynomial falloff instead of exp(): same curve shape, materially cheaper
+    // per fragment, and this shader runs on every blended pixel in the scene.
     vec2 uv = gl_PointCoord - 0.5;
     float d2 = dot(uv, uv);
     if (d2 > 0.25) discard;
-    float core = exp(-d2 * 26.0);
-    float halo = exp(-d2 * 5.0);
-    float a = core * 0.82 + halo * 0.34 - 0.03;
-    if (a <= 0.0) discard;
+    float a = 1.0 - d2 * 4.0;   // 1 at centre → 0 at the rim
+    a *= a;                      // sharpen: crisp point, no soft wash
     gl_FragColor = vec4(vColor, a * vAlpha);
   }
 `;

@@ -57,10 +57,13 @@ const fragmentShader = /* glsl */ `
     );
   }
 
+  // 4 octaves, not 6. This shader runs on every pixel of a fullscreen sphere, so each octave
+  // costs a full screen of noise — and octaves 5-6 contribute detail finer than the dither
+  // floor anyway. Halving the octave count is invisible and materially cheaper.
   float fbm(vec3 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 4; i++) {
       v += a * noise(p);
       p *= 2.03;
       a *= 0.5;
@@ -73,9 +76,11 @@ const fragmentShader = /* glsl */ `
     float t = uTime * 0.012;
 
     // Domain-warped volumetric cloud — warping is what makes it read as gas, not marble.
-    vec3 q = vec3(fbm(dir * 2.2 + vec3(0.0, t, 0.0)),
-                  fbm(dir * 2.2 + vec3(4.1, -t, 1.7)),
-                  fbm(dir * 2.2 + vec3(-2.3, t * 0.7, 3.4)));
+    // Two warp samples instead of three; the third axis is derived from the other two, which
+    // is visually indistinguishable and removes a whole fullscreen fbm from every frame.
+    float w1 = fbm(dir * 2.2 + vec3(0.0, t, 0.0));
+    float w2 = fbm(dir * 2.2 + vec3(4.1, -t, 1.7));
+    vec3 q = vec3(w1, w2, w1 - w2);
     float cloud = fbm(dir * 3.4 + q * 2.1);
 
     float nebula = smoothstep(0.42, 0.95, cloud);

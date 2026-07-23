@@ -2,7 +2,7 @@
 
 import { Environment, Lightformer, PerformanceMonitor, Preload } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { Bloom, ChromaticAberration, EffectComposer, Vignette } from '@react-three/postprocessing';
+import { Bloom, ChromaticAberration, EffectComposer, SMAA, Vignette } from '@react-three/postprocessing';
 import { useEffect, useMemo } from 'react';
 import { ACESFilmicToneMapping, HalfFloatType, Vector2 } from 'three';
 
@@ -61,11 +61,15 @@ function Post() {
   // time AND sharpens the image — the rare case where the fix serves both.
   return (
     <EffectComposer multisampling={0} frameBufferType={HalfFloatType}>
-      {/* High threshold: ONLY the HDR particles bloom. The background contributes no light,
-          so blacks stay black and the glow reads as optical rather than a wash. */}
-      <Bloom intensity={1.15} luminanceThreshold={0.62} luminanceSmoothing={0.12} radius={0.5} mipmapBlur />
-      <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.5} />
-      <Vignette eskil={false} offset={0.22} darkness={0.78} />
+      {/* Threshold pushed to 0.85 with almost no knee: ONLY genuinely hot particles bloom.
+          Anything dimmer stays crisp, which is what removes the white haze while keeping the
+          highlights luminous. Tight radius so the glow is optical, never a fog. */}
+      <Bloom intensity={0.95} luminanceThreshold={0.85} luminanceSmoothing={0.045} radius={0.42} mipmapBlur />
+      <ChromaticAberration offset={aberration} radialModulation modulationOffset={0.62} />
+      <Vignette eskil={false} offset={0.2} darkness={0.86} />
+      {/* SMAA rather than MSAA: a single cheap pass that cleans point and panel edges, where
+          MSAA cost a full multisampled half-float resolve for almost no benefit on sprites. */}
+      <SMAA />
     </EffectComposer>
   );
 }
