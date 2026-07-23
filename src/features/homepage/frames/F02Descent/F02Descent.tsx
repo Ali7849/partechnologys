@@ -23,8 +23,8 @@ import styles from './F02Descent.module.css';
  */
 
 // Model-space clip coordinate the plane travels through (mirrors PlaceholderSubject).
-const Z_TOP = 1.5;
-const Z_RANGE = 2.1;
+const Z_TOP = 2.0;
+const Z_RANGE = 2.9;
 
 export function F02Descent() {
   const lineRef = useRef<HTMLDivElement>(null);
