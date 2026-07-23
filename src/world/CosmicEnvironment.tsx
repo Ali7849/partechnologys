@@ -6,7 +6,7 @@ import { BackSide, Color, type ShaderMaterial } from 'three';
 
 import { useWorld } from '@/state/useWorld';
 
-import { accentAt, actsAt } from './scenes';
+import { accentAt, resolveActs } from './scenes';
 
 /**
  * COSMIC ENVIRONMENT — a living world, not a backdrop.
@@ -96,9 +96,10 @@ const fragmentShader = /* glsl */ `
           + accent * nebula * 0.62
           + accent * pow(nebula, 3.0) * 0.5) * uNebula;
 
-    // Vertical falloff so the world has a floor and a sky rather than uniform soup.
-    float band = smoothstep(-0.85, 0.55, dir.y);
-    col *= mix(0.55, 1.15, band);
+    // A gentle vertical gradient so the cloud has orientation, but nowhere near strong enough
+    // to read as a centred dome — the nebula must wrap the world evenly in every direction.
+    float band = smoothstep(-1.0, 0.75, dir.y);
+    col *= mix(0.78, 1.10, band);
 
     // Dither — kills banding across these very low-contrast gradients.
     col += (hash(vec3(gl_FragCoord.xy, uTime)) - 0.5) * 0.012;
@@ -130,10 +131,10 @@ export function CosmicEnvironment() {
     const step = Math.min(dt, 0.05);
     uniforms.uTime.value += step;
 
-    const { progress } = useWorld.getState();
+    const { progress, variant } = useWorld.getState();
 
     // Act 3: emerges around the particles, never replacing them, and never leaves again.
-    const target = actsAt(progress).nebula;
+    const target = resolveActs(progress, variant).nebula;
     uniforms.uNebula.value += (target - uniforms.uNebula.value) * Math.min(1, step * 2.2);
 
     const { from, to, blend } = accentAt(progress);
@@ -149,8 +150,10 @@ export function CosmicEnvironment() {
       {/* atmospheric perspective — distance dissolves into the void */}
       <fog attach="fog" args={['#070A14', 14, 52]} />
 
-      {/* the nebula shell the camera flies inside */}
-      <mesh scale={90} renderOrder={-1}>
+      {/* The nebula shell. Enormous — 320 units against a ~10-unit flight path — so it reads
+          as a cloud the camera is deep INSIDE rather than a dome sitting just behind the
+          action. The vortex is a gateway into this; it is not contained by it. */}
+      <mesh scale={320} renderOrder={-1}>
         <sphereGeometry args={[1, 64, 64]} />
         <shaderMaterial
           ref={materialRef}

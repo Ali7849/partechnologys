@@ -9,9 +9,11 @@ import { ACESFilmicToneMapping, HalfFloatType, Vector2 } from 'three';
 import { useWorld } from '@/state/useWorld';
 
 import { CosmicEnvironment } from './CosmicEnvironment';
+import { Fragments } from './Fragments';
 import { HeroCore } from './HeroCore';
 import { Starfield } from './Starfield';
 import { WorldCamera } from './WorldCamera';
+import type { WorldVariant } from './scenes';
 
 /**
  * THE WORLD — one persistent 3D space the entire experience takes place inside. Mounted once,
@@ -68,8 +70,14 @@ function Post() {
   );
 }
 
-export function World() {
+export function World({ variant = 'fragment-journey' }: { variant?: WorldVariant }) {
   const setMouse = useWorld((s) => s.setMouse);
+  const setVariant = useWorld((s) => s.setVariant);
+
+  // The variant lives in the store so every useFrame consumer can read it without props.
+  useEffect(() => {
+    setVariant(variant);
+  }, [variant, setVariant]);
 
   // Pointer feeds the store directly — no React state, so nothing re-renders on move.
   useEffect(() => {
@@ -107,6 +115,8 @@ export function World() {
         <WorldCamera />
         <Starfield />
         <HeroCore />
+        {/* The capability fragments ARE the pillars — only the full journey carries them. */}
+        {variant === 'fragment-journey' ? <Fragments /> : null}
 
         {/* key + fill, kept low so the lightformer reflections do the describing */}
         <ambientLight intensity={0.24} />

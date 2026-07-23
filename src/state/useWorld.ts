@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import type { WorldVariant } from '@/world/scenes';
+
 /**
  * The world store. Everything that changes per-frame (scroll position along the camera path,
  * pointer parallax) is read OUTSIDE React via `getState()` inside useFrame, so the camera and
@@ -23,10 +25,13 @@ type WorldState = {
    * returns. Never read during render — only inside useFrame — so it costs no re-renders.
    */
   quality: number;
+  /** Which preserved concept is being viewed — see WorldVariant. */
+  variant: WorldVariant;
   setProgress: (p: number) => void;
   setMouse: (x: number, y: number) => void;
   setEntered: (v: boolean) => void;
   setQuality: (q: number) => void;
+  setVariant: (v: WorldVariant) => void;
 };
 
 export const useWorld = create<WorldState>((set) => ({
@@ -35,8 +40,10 @@ export const useWorld = create<WorldState>((set) => ({
   mouseY: 0,
   entered: false,
   quality: 1,
+  variant: 'fragment-journey',
   setProgress: (progress) => set({ progress }),
   setMouse: (mouseX, mouseY) => set({ mouseX, mouseY }),
   setEntered: (entered) => set({ entered }),
   setQuality: (quality) => set({ quality }),
+  setVariant: (variant) => set({ variant }),
 }));

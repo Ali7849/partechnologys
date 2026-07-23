@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic';
 
 import { CanvasBoundary } from '@/components/CanvasBoundary/CanvasBoundary';
 
+import type { WorldVariant } from './scenes';
+
 /**
  * The world is client-only (WebGL has no server render) and code-split, so the copy is
  * readable before the environment streams in. If the context is unavailable the page keeps
@@ -12,10 +14,10 @@ import { CanvasBoundary } from '@/components/CanvasBoundary/CanvasBoundary';
 
 const World = dynamic(() => import('./World').then((m) => m.World), { ssr: false });
 
-export function WorldLazy() {
+export function WorldLazy({ variant = 'fragment-journey' }: { variant?: WorldVariant }) {
   return (
     <CanvasBoundary fallback={null}>
-      <World />
+      <World variant={variant} />
     </CanvasBoundary>
   );
 }

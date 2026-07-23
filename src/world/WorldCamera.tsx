@@ -6,7 +6,7 @@ import { Vector3 } from 'three';
 
 import { useWorld } from '@/state/useWorld';
 
-import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT, actsAt } from './scenes';
+import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT, resolveActs } from './scenes';
 
 /**
  * WORLD CAMERA — one continuous shot from the first frame to the last.
@@ -32,10 +32,10 @@ export function WorldCamera() {
 
   useFrame((_, dt) => {
     const step = Math.min(dt, 0.05);
-    const { progress, mouseX, mouseY } = useWorld.getState();
+    const { progress, mouseX, mouseY, variant } = useWorld.getState();
     time.current += step;
 
-    const acts = actsAt(progress);
+    const acts = resolveActs(progress, variant);
 
     // Damp toward the scroll position — weight, not snap.
     eased.current += (progress - eased.current) * Math.min(1, step * 3.2);

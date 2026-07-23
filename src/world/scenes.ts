@@ -56,7 +56,7 @@ export const SCENES: Scene[] = [
  * Camera waypoints — a descending orbit that spirals around the core, pulling back for the
  * opening, sweeping wide through the pillars, and dollying in close at the end.
  */
-const WAYPOINTS: [number, number, number][] = [
+export const WAYPOINTS: [number, number, number][] = [
   [0, 0.8, 10.5], // origin — wide, head-on
   [7.2, 2.2, 7.4], // intelligence
   [9.6, -0.6, 0.8], // software
@@ -118,6 +118,23 @@ export function birthAt(progress: number): number {
  */
 export type Acts = { expand: number; nebula: number; hero: number };
 
+/**
+ * The three preserved concepts. Each is a real, comparable build rather than a lost revision:
+ *
+ *   nebula-world      Mockup 01 — the original nebula world, fully revealed from the first
+ *                     frame. No vortex gate, no fragments. The environment as it was.
+ *   vortex-intro      Mockup 02 — the four-act vortex opening in isolation, no fragments.
+ *   fragment-journey  Mockup 03 — the full journey: vortex gateway → nebula → capability
+ *                     fragments with floating panels. This is the live experience.
+ */
+export type WorldVariant = 'nebula-world' | 'vortex-intro' | 'fragment-journey';
+
+/** Mockup 01 skips the birth entirely — the world simply exists. */
+export function resolveActs(progress: number, variant: WorldVariant): Acts {
+  if (variant === 'nebula-world') return { expand: 1, nebula: 1, hero: 1 };
+  return actsAt(progress);
+}
+
 export function actsAt(progress: number): Acts {
   const b = Math.min(1, Math.max(0, progress / BIRTH_SPAN));
   return {
@@ -126,6 +143,28 @@ export function actsAt(progress: number): Acts {
     hero: smoothstep(0.62, 1.0, b),
   };
 }
+
+/**
+ * FRAGMENT ANCHORS — where each capability's nebula fragment hangs in space.
+ *
+ * The fragments ARE the pillars; there is no separate section system. Each is placed inboard
+ * of its own camera waypoint so the journey naturally flies between them, and lifted or
+ * dropped off the ecliptic so the route never feels like a flat carousel.
+ */
+export const FRAGMENT_ANCHORS: { id: string; position: [number, number, number]; accent: string }[] =
+  SCENES.flatMap((scene, i) => {
+    if (scene.kind !== 'pillar') return [];
+    const w = WAYPOINTS[i] ?? [0, 0, 0];
+    const pull = 0.52; // inboard of the flight path, so the camera passes alongside
+    const lift = i % 2 === 0 ? 1.15 : -0.95;
+    return [
+      {
+        id: scene.id,
+        position: [w[0] * pull, w[1] * pull + lift, w[2] * pull] as [number, number, number],
+        accent: scene.accent,
+      },
+    ];
+  });
 
 /**
  * The two scene accents the camera is currently between, and how far between them it is —

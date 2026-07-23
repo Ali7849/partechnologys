@@ -1,4 +1,5 @@
 import { WorldLazy } from '@/world/WorldLazy';
+import type { WorldVariant } from '@/world/scenes';
 
 import { ScrollStage } from './ScrollStage';
 
@@ -7,14 +8,16 @@ import { ScrollStage } from './ScrollStage';
  *
  * There is no page structure here, deliberately. A single persistent 3D world is mounted once
  * and never unmounts; scrolling flies the camera along one spline through it, and each scene's
- * content emerges from the environment as the camera arrives. The previous section-based
- * homepage is retired — scenes connected by camera movement, not blocks stacked vertically.
+ * content emerges from the environment as the camera arrives.
+ *
+ * `variant` selects which preserved concept is shown, so earlier directions stay comparable
+ * instead of being overwritten — see WorldVariant.
  */
 
-export function Homepage() {
+export function Homepage({ variant = 'fragment-journey' }: { variant?: WorldVariant }) {
   return (
     <>
-      <WorldLazy />
+      <WorldLazy variant={variant} />
       <ScrollStage />
     </>
   );

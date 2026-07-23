@@ -6,7 +6,7 @@ import { AdditiveBlending, Color, Vector2, type BufferGeometry, type ShaderMater
 
 import { useWorld } from '@/state/useWorld';
 
-import { accentAt, actsAt } from './scenes';
+import { accentAt, resolveActs } from './scenes';
 
 /**
  * THE PARTICLE UNIVERSE — one system that plays every act.
@@ -83,26 +83,30 @@ const vertexShader = /* glsl */ `
 
   void main() {
     // ── ACT 1 · the vortex ───────────────────────────────────────────────────
-    // Built in the XY plane so it FACES the viewer, and stretched vertically into the
-    // silhouette of an eye rather than a circular ring.
-    float ang    = aRandom.z * 6.2831;
-    float radial = pow(aRandom.x, 0.55);
-    float ringR  = 0.85 + radial * 3.05;
+    // An EYE SEEN FROM THE SIDE: a long horizontal lens with pointed ends, not a ring.
+    // sign(sin t) * |sin t|^p collapses the vertical extent to a point at t = 0 and t = PI,
+    // which is what produces the sharp corners of the eye rather than a rounded ellipse.
+    float band   = pow(aRandom.x, 0.55);          // which shell of the portal wall
+    float radial = band;
 
     float breathe = 1.0 + 0.09 * sin(uTime * 0.33);
     float stretch = 1.0 + 0.12 * sin(uTime * 0.21 + 1.3);
     float squash  = 1.0 + 0.08 * sin(uTime * 0.27 + 2.1);
 
+    // Energy FLOWS around the contour — the shape stays put while light streams through it,
+    // so it reads as a living portal instead of a spinning object.
+    float t = aRandom.z * 6.2831 + uTime * uSpin * (0.50 + band * 0.55);
+    float s = sin(t);
+    float taper = sign(s) * pow(abs(s), 1.75);
+
+    float shell = 0.80 + band * 0.36;
     vec3 vortex = vec3(
-      cos(ang) * ringR * 0.60 * squash,
-      sin(ang) * ringR * 1.52 * stretch * breathe,
-      (aRandom.y - 0.5) * (0.30 + radial * 0.85)
+      cos(t) * 4.75 * shell * stretch,
+      taper  * 1.42 * shell * breathe,
+      (aRandom.y - 0.5) * (0.22 + band * 0.62) * squash
     );
 
-    // Swirls in its own plane, inner faster than outer.
-    vortex = rotZ(vortex, uTime * uSpin * (1.25 / (0.5 + ringR * 0.30)));
-
-    // Sits right of centre, drifting back to centre as it opens.
+    // Sits right of centre, drifting back to centre as it opens into the gateway.
     vortex.x += 2.15 * (1.0 - uExpand * 0.85);
 
     // ── ACT 2 · the volumetric field ─────────────────────────────────────────
@@ -153,10 +157,14 @@ const vertexShader = /* glsl */ `
     float size = (0.09 + sizeSeed * 0.15) + bright * 0.32;
     gl_PointSize = clamp(size * (95.0 / dist), 0.62, 1.75) * uPixelRatio;
 
-    // Cool blue-white, occasional warm stars, accent bleeding in at depth.
+    // Stellar temperature ramp — four stops rather than a blue↔white lerp, so the field has
+    // real colour depth: hot blue giants through white to amber and rare deep-orange stars.
     float temp = aRandom.y;
-    vec3 c = mix(vec3(0.70, 0.81, 1.00), vec3(0.98, 0.99, 1.00), smoothstep(0.25, 0.80, temp));
-    c = mix(c, vec3(1.00, 0.80, 0.58), step(0.90, temp) * 0.9);
+    vec3 c = vec3(0.42, 0.58, 1.00);
+    c = mix(c, vec3(0.70, 0.82, 1.00), smoothstep(0.00, 0.35, temp));
+    c = mix(c, vec3(1.00, 0.99, 0.96), smoothstep(0.32, 0.72, temp));
+    c = mix(c, vec3(1.00, 0.86, 0.66), smoothstep(0.74, 0.93, temp));
+    c = mix(c, vec3(1.00, 0.62, 0.38), smoothstep(0.94, 1.00, temp));
     c = mix(c, uAccent, smoothstep(45.0, 90.0, dist) * 0.35);
     c = mix(c, uAccent * 1.6 + 0.3, captured * uHero);
 
@@ -181,12 +189,15 @@ const fragmentShader = /* glsl */ `
   varying float vAlpha;
 
   void main() {
-    // Smooth gaussian-style falloff — no hard rim, so particles never read as sprites or
-    // show stair-stepping at these sizes. Dead fragments are dropped before blending.
+    // Two-lobe optical profile: a tight core plus a wide, faint halo. This is what real
+    // lenses do with point light, and it is why the accumulation reads as luminous energy
+    // rather than a field of flat discs. No hard rim, so nothing ever looks like a sprite.
     vec2 uv = gl_PointCoord - 0.5;
     float d2 = dot(uv, uv);
     if (d2 > 0.25) discard;
-    float a = exp(-d2 * 9.0) - 0.105;
+    float core = exp(-d2 * 26.0);
+    float halo = exp(-d2 * 5.0);
+    float a = core * 0.82 + halo * 0.34 - 0.03;
     if (a <= 0.0) discard;
     gl_FragColor = vec4(vColor, a * vAlpha);
   }
@@ -275,8 +286,8 @@ export function Starfield() {
     uniforms.uTime.value = elapsed.current;
     uniforms.uPixelRatio.value = dpr;
 
-    const { progress, quality, mouseX, mouseY } = useWorld.getState();
-    const acts = actsAt(progress);
+    const { progress, quality, mouseX, mouseY, variant } = useWorld.getState();
+    const acts = resolveActs(progress, variant);
 
     // Settles from its arrival energy, then accelerates again as it opens. Never reaches zero.
     const settle = 0.62 + 0.75 * Math.exp(-elapsed.current * 0.35);

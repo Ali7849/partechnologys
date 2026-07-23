@@ -7,7 +7,7 @@ import { AdditiveBlending, BackSide, Color, type Group, type Mesh, type MeshBasi
 
 import { useWorld } from '@/state/useWorld';
 
-import { accentAt, actsAt } from './scenes';
+import { accentAt, resolveActs } from './scenes';
 
 /**
  * HERO CORE — the heart of the world.
@@ -38,7 +38,8 @@ export function HeroCore() {
   useFrame((_, dt) => {
     // Act 4: the core forms out of the surrounding particle energy — it does not exist at all
     // until the nebula has wrapped the field, then it grows as the captured streams gather.
-    const t = actsAt(useWorld.getState().progress).hero;
+    const world = useWorld.getState();
+    const t = resolveActs(world.progress, world.variant).hero;
     born.current += (t - born.current) * Math.min(1, dt * 3);
     if (root.current) {
       root.current.scale.setScalar(Math.max(0.0001, born.current));
