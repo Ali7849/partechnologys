@@ -1,0 +1,19 @@
+.rule {
+  border: 0;
+  block-size: 1px;
+  inline-size: 100%;
+  margin: 0;
+}
+
+.toneZinc30 {
+  background-color: var(--zinc-30);
+}
+.toneZinc {
+  background-color: var(--zinc);
+}
+.toneSubstrate80 {
+  background-color: var(--substrate-80);
+}
+.toneVellumHair {
+  background-color: var(--vellum-hair);
+}

@@ -1,0 +1,134 @@
+.text {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ── Display — Archivo, spread at expanded width so it distributes like load ── */
+.d1 {
+  font-family: var(--type-d1-family);
+  font-size: var(--type-d1-size);
+  font-weight: var(--type-d1-weight);
+  letter-spacing: var(--type-d1-tracking);
+  line-height: var(--type-d1-leading);
+  font-variation-settings: 'wdth' 118;
+  text-wrap: balance;
+}
+
+.d2 {
+  font-family: var(--type-d2-family);
+  font-size: var(--type-d2-size);
+  font-weight: var(--type-d2-weight);
+  letter-spacing: var(--type-d2-tracking);
+  line-height: var(--type-d2-leading);
+  font-variation-settings: 'wdth' 112;
+  text-wrap: balance;
+}
+
+.d3 {
+  font-family: var(--type-d3-family);
+  font-size: var(--type-d3-size);
+  font-weight: var(--type-d3-weight);
+  letter-spacing: var(--type-d3-tracking);
+  line-height: var(--type-d3-leading);
+  font-variation-settings: 'wdth' 104;
+  text-wrap: balance;
+}
+
+/* ── Heading — Archivo, natural width ── */
+.h1 {
+  font-family: var(--type-h1-family);
+  font-size: var(--type-h1-size);
+  font-weight: var(--type-h1-weight);
+  letter-spacing: var(--type-h1-tracking);
+  line-height: var(--type-h1-leading);
+  text-wrap: balance;
+}
+
+.h2 {
+  font-family: var(--type-h2-family);
+  font-size: var(--type-h2-size);
+  font-weight: var(--type-h2-weight);
+  letter-spacing: var(--type-h2-tracking);
+  line-height: var(--type-h2-leading);
+  text-wrap: balance;
+}
+
+.h3 {
+  font-family: var(--type-h3-family);
+  font-size: var(--type-h3-size);
+  font-weight: var(--type-h3-weight);
+  letter-spacing: var(--type-h3-tracking);
+  line-height: var(--type-h3-leading);
+}
+
+/* ── Body — Source Serif, hard measure limit (never wider than spec) ── */
+.b1 {
+  font-family: var(--type-b1-family);
+  font-size: var(--type-b1-size);
+  font-weight: var(--type-b1-weight);
+  line-height: var(--type-b1-leading);
+  max-inline-size: var(--type-b1-measure);
+}
+
+.b2 {
+  font-family: var(--type-b2-family);
+  font-size: var(--type-b2-size);
+  font-weight: var(--type-b2-weight);
+  line-height: var(--type-b2-leading);
+  max-inline-size: var(--type-b2-measure);
+}
+
+.b3 {
+  font-family: var(--type-b3-family);
+  font-size: var(--type-b3-size);
+  font-weight: var(--type-b3-weight);
+  line-height: var(--type-b3-leading);
+  max-inline-size: var(--type-b3-measure);
+}
+
+/* ── Instrument — IBM Plex Mono, tabular figures, uppercase at M2/M3 ── */
+.m1 {
+  font-family: var(--type-m1-family);
+  font-size: var(--type-m1-size);
+  font-weight: var(--type-m1-weight);
+  letter-spacing: var(--type-m1-tracking);
+  line-height: var(--type-m1-leading);
+  font-variant-numeric: tabular-nums;
+}
+
+.m2 {
+  font-family: var(--type-m2-family);
+  font-size: var(--type-m2-size);
+  font-weight: var(--type-m2-weight);
+  letter-spacing: var(--type-m2-tracking);
+  line-height: var(--type-m2-leading);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.m3 {
+  font-family: var(--type-m3-family);
+  font-size: var(--type-m3-size);
+  font-weight: var(--type-m3-weight);
+  letter-spacing: var(--type-m3-tracking);
+  line-height: var(--type-m3-leading);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Tone — the only colour mechanism on Text ── */
+.toneSubstrate {
+  color: var(--substrate);
+}
+.toneZinc {
+  color: var(--zinc);
+}
+.tonePrussian {
+  color: var(--prussian);
+}
+.toneCured {
+  color: var(--cured);
+}
+.toneFault {
+  color: var(--fault);
+}
