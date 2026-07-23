@@ -1,7 +1,0 @@
-/* A full-frame, zero-cost sentinel the IntersectionObserver watches. It carries no visual;
-   the ground transition it triggers is applied to <body>. */
-.sentinel {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}

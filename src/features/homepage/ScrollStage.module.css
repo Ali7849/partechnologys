@@ -1,0 +1,201 @@
+/* Pure scroll length. The world is what you actually see. */
+.track {
+  position: relative;
+  inline-size: 100%;
+  pointer-events: none;
+}
+
+/* Fixed overlay — content lives in front of the world, never scrolls past it. */
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  inset-block-end: clamp(3rem, 12vh, 8rem);
+  inset-inline-start: clamp(1.5rem, 6vw, 6rem);
+  inline-size: min(46ch, 78vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(26px);
+  transition:
+    opacity 900ms cubic-bezier(0.16, 0.84, 0.24, 1),
+    transform 1100ms cubic-bezier(0.16, 0.84, 0.24, 1),
+    visibility 0s linear 900ms;
+}
+
+.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+/* The closing scene sits centre-frame — the camera has dollied in, the journey resolves. */
+.centred {
+  inset-block-end: auto;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  translate: -50% -50%;
+  align-items: center;
+  text-align: center;
+  inline-size: min(60ch, 86vw);
+}
+
+.centred.active {
+  transform: translateY(0);
+}
+
+/* ── Type ─────────────────────────────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 700ms ease 120ms,
+    transform 700ms cubic-bezier(0.16, 0.84, 0.24, 1) 120ms;
+}
+
+.active .eyebrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.6vw, 4.1rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  color: #f4f6fa;
+  text-wrap: balance;
+}
+
+/* Per-line mask so each line rises out of its own box. */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-block-end: 0.1em;
+  margin-block-end: -0.1em;
+}
+
+.lineInner {
+  display: block;
+  transform: translateY(108%);
+  transition: transform 1000ms cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+
+.line:nth-child(2) .lineInner {
+  transition-delay: 90ms;
+}
+
+.active .lineInner {
+  transform: translateY(0);
+}
+
+.lead {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.15vw, 1.12rem);
+  line-height: 1.6;
+  color: rgba(238, 242, 250, 0.62);
+  opacity: 0;
+  transition: opacity 900ms ease 320ms;
+}
+
+.active .lead {
+  opacity: 1;
+}
+
+.mail {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: clamp(0.85rem, 1.1vw, 1rem);
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-decoration: none;
+  border-block-end: 1px solid currentColor;
+  padding-block-end: 0.3rem;
+  opacity: 0;
+  transition:
+    opacity 900ms ease 320ms,
+    color 220ms ease;
+}
+
+.active .mail {
+  opacity: 1;
+}
+
+.mail:hover {
+  color: #ffffff;
+}
+
+/* ── Manifest — capabilities read as instrument data, not a services list ──── */
+.manifest {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+}
+
+.manifestItem {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(238, 242, 250, 0.5);
+  padding: 0.32rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 2px;
+  background-color: rgba(10, 13, 20, 0.35);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 520ms ease calc(var(--i) * 42ms + 420ms),
+    transform 520ms cubic-bezier(0.16, 0.84, 0.24, 1) calc(var(--i) * 42ms + 420ms),
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+.active .manifestItem {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 720px) {
+  .caption {
+    inset-inline: 1.25rem 1.25rem;
+    inline-size: auto;
+  }
+  .centred {
+    inset-inline: 1.25rem 1.25rem;
+    inline-size: auto;
+    translate: 0 -50%;
+    inset-inline-start: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caption,
+  .eyebrow,
+  .lineInner,
+  .lead,
+  .mail,
+  .manifestItem {
+    transition-duration: 1ms;
+    transform: none;
+  }
+}

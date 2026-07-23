@@ -1,29 +1,21 @@
-import { AuroraFieldLazy } from '@/three/AuroraFieldLazy';
+import { WorldLazy } from '@/world/WorldLazy';
 
-import { Closing } from './Closing';
-import { Opening } from './Opening';
-import { PILLARS } from './content/pillars';
-import { PillarSection } from './pillars/PillarSection';
+import { ScrollStage } from './ScrollStage';
 
 /**
- * PAR//OS — the homepage as one continuous journey, not stacked sections.
+ * PAR // TECHNOLOGYS — one continuous cinematic journey.
  *
- * The visitor enters a system coming online, then travels through the seven capability
- * pillars, each its own world with its own accent and atmosphere, and resolves at a single
- * address. Navigation is by command (⌘K), not a nav bar.
- *
- * Rebuilt from first principles; the previous seven-frame concept is retired.
+ * There is no page structure here, deliberately. A single persistent 3D world is mounted once
+ * and never unmounts; scrolling flies the camera along one spline through it, and each scene's
+ * content emerges from the environment as the camera arrives. The previous section-based
+ * homepage is retired — scenes connected by camera movement, not blocks stacked vertically.
  */
 
 export function Homepage() {
   return (
     <>
-      <AuroraFieldLazy />
-      <Opening />
-      {PILLARS.map((pillar) => (
-        <PillarSection key={pillar.id} pillar={pillar} />
-      ))}
-      <Closing />
+      <WorldLazy />
+      <ScrollStage />
     </>
   );
 }
