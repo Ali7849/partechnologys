@@ -96,11 +96,35 @@ export const SCENE_COUNT = SCENES.length;
  * captured into orbit around the core, and the camera closes in. 0 = untouched galaxy,
  * 1 = core fully born and the spline journey proper begins.
  */
-export const BIRTH_SPAN = 0.11;
+export const BIRTH_SPAN = 0.13;
+
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 export function birthAt(progress: number): number {
-  const t = Math.min(1, Math.max(0, progress / BIRTH_SPAN));
-  return t * t * (3 - 2 * t); // smoothstep
+  return smoothstep(0, 1, Math.min(1, Math.max(0, progress / BIRTH_SPAN)));
+}
+
+/**
+ * THE FOUR ACTS of the opening. Each returns 0→1 and they deliberately OVERLAP, so no stage
+ * ever pops in or out — the world assembles continuously:
+ *
+ *   1. vortex   an elliptical particle vortex alone in the dark. Nothing else exists yet.
+ *   2. expand   it accelerates and unfurls into a volumetric field; the camera flies through it.
+ *   3. nebula   the volumetric nebula emerges AROUND those same particles and wraps them.
+ *   4. hero     the core forms out of the surrounding energy, and the journey proper begins.
+ */
+export type Acts = { expand: number; nebula: number; hero: number };
+
+export function actsAt(progress: number): Acts {
+  const b = Math.min(1, Math.max(0, progress / BIRTH_SPAN));
+  return {
+    expand: smoothstep(0.04, 0.58, b),
+    nebula: smoothstep(0.34, 0.82, b),
+    hero: smoothstep(0.62, 1.0, b),
+  };
 }
 
 /**

@@ -7,7 +7,7 @@ import { AdditiveBlending, BackSide, Color, type Group, type Mesh, type MeshBasi
 
 import { useWorld } from '@/state/useWorld';
 
-import { accentAt, birthAt } from './scenes';
+import { accentAt, actsAt } from './scenes';
 
 /**
  * HERO CORE — the heart of the world.
@@ -36,11 +36,10 @@ export function HeroCore() {
 
   // Continuous rotation + counter-rotating shell, and the emissive shard takes the scene accent.
   useFrame((_, dt) => {
-    // The core is born out of the galaxy: it only begins to exist once the spiral has broken
-    // apart, then scales up as the captured particles wrap it.
-    const reveal = birthAt(useWorld.getState().progress);
-    const t = Math.min(1, Math.max(0, (reveal - 0.32) / 0.68));
-    born.current += (t * t * (3 - 2 * t) - born.current) * Math.min(1, dt * 3);
+    // Act 4: the core forms out of the surrounding particle energy — it does not exist at all
+    // until the nebula has wrapped the field, then it grows as the captured streams gather.
+    const t = actsAt(useWorld.getState().progress).hero;
+    born.current += (t - born.current) * Math.min(1, dt * 3);
     if (root.current) {
       root.current.scale.setScalar(Math.max(0.0001, born.current));
       root.current.visible = born.current > 0.01;

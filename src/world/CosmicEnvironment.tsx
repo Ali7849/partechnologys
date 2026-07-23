@@ -1,13 +1,12 @@
 'use client';
 
-import { Sparkles, Stars } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { BackSide, Color, type ShaderMaterial } from 'three';
 
 import { useWorld } from '@/state/useWorld';
 
-import { accentAt } from './scenes';
+import { accentAt, actsAt } from './scenes';
 
 /**
  * COSMIC ENVIRONMENT — a living world, not a backdrop.
@@ -36,6 +35,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3  uAccentA;
   uniform vec3  uAccentB;
   uniform float uBlend;
+  uniform float uNebula;  // act 3 — the nebula emerges AROUND the particles
   varying vec3  vPos;
 
   float hash(vec3 p) {
@@ -87,14 +87,13 @@ const fragmentShader = /* glsl */ `
     vec3 deep  = vec3(0.016, 0.020, 0.035);
     vec3 cool  = vec3(0.10, 0.16, 0.42);
 
-    // The nebula is the base environment for the WHOLE experience — it never recedes and
-    // never disappears; the starfield lives inside it.
+    // The nebula opens the experience INVISIBLE — the vortex is alone in the dark — then
+    // emerges around those same particles and stays for the rest of the journey. Light
+    // scattering makes the cores bloom brighter than their edges.
     vec3 col = deep;
-    col += cool   * wisp   * 0.34;
-    col += accent * nebula * 0.62;
-
-    // Light scattering — the nebula cores bloom brighter than their edges.
-    col += accent * pow(nebula, 3.0) * 0.5;
+    col += (cool * wisp * 0.34
+          + accent * nebula * 0.62
+          + accent * pow(nebula, 3.0) * 0.5) * uNebula;
 
     // Vertical falloff so the world has a floor and a sky rather than uniform soup.
     float band = smoothstep(-0.85, 0.55, dir.y);
@@ -116,6 +115,7 @@ export function CosmicEnvironment() {
       uAccentA: { value: new Color('#7AA2F7') },
       uAccentB: { value: new Color('#7AA2F7') },
       uBlend: { value: 0 },
+      uNebula: { value: 0 },
     }),
     [],
   );
@@ -126,9 +126,16 @@ export function CosmicEnvironment() {
   // Advances the nebula and bleeds it toward the accent of the scene the camera is entering.
   useFrame((_, dt) => {
     if (!materialRef.current) return;
-    uniforms.uTime.value += dt;
+    const step = Math.min(dt, 0.05);
+    uniforms.uTime.value += step;
 
-    const { from, to, blend } = accentAt(useWorld.getState().progress);
+    const { progress } = useWorld.getState();
+
+    // Act 3: emerges around the particles, never replacing them, and never leaves again.
+    const target = actsAt(progress).nebula;
+    uniforms.uNebula.value += (target - uniforms.uNebula.value) * Math.min(1, step * 2.2);
+
+    const { from, to, blend } = accentAt(progress);
     colA.set(from);
     colB.set(to);
     uniforms.uAccentA.value.lerp(colA, Math.min(1, dt * 3));
@@ -155,12 +162,8 @@ export function CosmicEnvironment() {
         />
       </mesh>
 
-      {/* starfield — parallaxes naturally because it is real geometry at real depth */}
-      <Stars radius={70} depth={48} count={4200} factor={3.6} saturation={0} fade speed={0.5} />
-
-      {/* floating space dust close to the camera */}
-      <Sparkles count={140} scale={18} size={2.4} speed={0.22} opacity={0.45} color="#B9D2FF" />
-      <Sparkles count={70} scale={9} size={1.4} speed={0.14} opacity={0.3} color="#FFFFFF" />
+      {/* Stars and dust are NOT separate systems — the 400k particle universe is both, so the
+          vortex can own the opening completely and nothing else exists until it unfurls. */}
     </>
   );
 }

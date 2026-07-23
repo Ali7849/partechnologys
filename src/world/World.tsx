@@ -58,8 +58,10 @@ function Governor() {
 function Post() {
   const aberration = useMemo(() => new Vector2(0.0004, 0.0006), []);
 
+  // 2× MSAA rather than 4×: with 400k additive points the composer resolve is the single most
+  // expensive pass, and bloom softens edges anyway — this buys back real frame time.
   return (
-    <EffectComposer multisampling={4} frameBufferType={HalfFloatType}>
+    <EffectComposer multisampling={2} frameBufferType={HalfFloatType}>
       {/* subtle, and focused on the core — distance softens, the subject never does */}
       <DepthOfField focusDistance={0.026} focalLength={0.035} bokehScale={1.0} height={640} />
       {/* tight radius + high threshold: only genuinely hot pixels bloom */}
@@ -89,7 +91,7 @@ export function World() {
     >
       <Canvas
         dpr={[1, 2]}
-        camera={{ position: [0, 2.4, 26], fov: 42, near: 0.1, far: 400 }}
+        camera={{ position: [0, 1.6, 13.5], fov: 42, near: 0.1, far: 400 }}
         gl={{
           antialias: false, // the composer's MSAA does this better
           alpha: false,

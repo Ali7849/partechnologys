@@ -6,18 +6,17 @@ import { Vector3 } from 'three';
 
 import { useWorld } from '@/state/useWorld';
 
-import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT, birthAt } from './scenes';
+import { CAMERA_PATH, LOOK_TARGETS, SCENE_COUNT, actsAt } from './scenes';
 
 /**
- * WORLD CAMERA — the single continuous shot.
+ * WORLD CAMERA — one continuous shot from the first frame to the last.
  *
- * Scroll is not paging; it is position along one Catmull-Rom spline that orbits the core. On
- * arrival (before any scroll) the camera keeps a slow autonomous orbit and a gentle dolly so
- * the opening breathes instead of sitting still; as soon as the journey begins, the path takes
- * over and the idle motion fades out. Pointer movement adds a small parallax lean on top of
- * everything, so the world always responds to the visitor.
+ *   ACT 1  holds on the elliptical vortex, orbiting it slowly, leaning with the pointer
+ *   ACT 2  flies THROUGH the vortex as it unfurls, so the viewer enters the universe
+ *   ACT 4  hands off to the Catmull-Rom spline and the journey proper
  *
- * Position is damped rather than snapped, which is what gives the move its weight.
+ * The handoff is a blend, not a cut: the intro camera and the spline are crossfaded by the
+ * hero act, so there is no frame where the shot changes.
  */
 
 export function WorldCamera() {
@@ -25,43 +24,41 @@ export function WorldCamera() {
   const eased = useRef(0);
   const time = useRef(0);
 
+  const splinePos = useMemo(() => new Vector3(), []);
+  const introPos = useMemo(() => new Vector3(), []);
   const pos = useMemo(() => new Vector3(), []);
   const look = useMemo(() => new Vector3(), []);
   const lookEased = useMemo(() => new Vector3(0, 0, 0), []);
 
   useFrame((_, dt) => {
+    const step = Math.min(dt, 0.05);
     const { progress, mouseX, mouseY } = useWorld.getState();
-    time.current += dt;
+    time.current += step;
+
+    const acts = actsAt(progress);
 
     // Damp toward the scroll position — weight, not snap.
-    eased.current += (progress - eased.current) * Math.min(1, dt * 3.2);
+    eased.current += (progress - eased.current) * Math.min(1, step * 3.2);
     const p = Math.min(1, Math.max(0, eased.current));
 
-    CAMERA_PATH.getPointAt(p, pos);
+    // ── The intro camera ────────────────────────────────────────────────────
+    // Frames the oval vortex, then drives straight through it as it expands.
+    const dolly = 13.5 - acts.expand * 9.5; // 13.5 → 4.0: we pass through the field
+    const orbit = time.current * 0.05;
+    introPos.set(Math.sin(orbit) * 1.6, 1.6 - acts.expand * 1.1, Math.cos(orbit) * dolly);
 
-    // THE APPROACH — at rest the camera sits far out with the whole spiral in frame, then
-    // closes on the core as the galaxy gives birth to it, arriving exactly as the path begins.
-    const reveal = birthAt(progress);
-    pos.multiplyScalar(1 + (1 - reveal) * 1.55);
+    // ── The journey camera ──────────────────────────────────────────────────
+    CAMERA_PATH.getPointAt(p, splinePos);
 
-    // Autonomous orbit + dolly while the galaxy still holds the frame.
-    const idle = 1 - reveal;
-    if (idle > 0.001) {
-      const a = time.current * 0.06 * idle;
-      const cos = Math.cos(a);
-      const sin = Math.sin(a);
-      const x = pos.x * cos - pos.z * sin;
-      const z = pos.x * sin + pos.z * cos;
-      pos.set(x, pos.y, z);
-      // occasional dolly toward the object
-      pos.multiplyScalar(1 - 0.055 * idle * (0.5 + 0.5 * Math.sin(time.current * 0.22)));
-    }
+    // Crossfade: no cut, ever.
+    pos.copy(introPos).lerp(splinePos, acts.hero);
 
-    // Pointer parallax — a lean, never a swing.
-    pos.x += mouseX * 0.55;
-    pos.y += mouseY * 0.38;
+    // Pointer parallax — a lean, never a swing. Strongest while the vortex owns the frame.
+    const lean = 1 - acts.hero * 0.5;
+    pos.x += mouseX * 0.62 * lean;
+    pos.y += mouseY * 0.42 * lean;
 
-    camera.position.lerp(pos, Math.min(1, dt * 4));
+    camera.position.lerp(pos, Math.min(1, step * 4));
 
     // Look target drifts between scenes so the core is never locked dead-centre.
     const t = p * (SCENE_COUNT - 1);
@@ -69,12 +66,8 @@ export function WorldCamera() {
     const f = t - i;
     const a = LOOK_TARGETS[i] ?? [0, 0, 0];
     const b = LOOK_TARGETS[i + 1] ?? a;
-    look.set(
-      a[0] + (b[0] - a[0]) * f,
-      a[1] + (b[1] - a[1]) * f,
-      a[2] + (b[2] - a[2]) * f,
-    );
-    lookEased.lerp(look, Math.min(1, dt * 3));
+    look.set(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f);
+    lookEased.lerp(look, Math.min(1, step * 3));
     camera.lookAt(lookEased);
   });
 
